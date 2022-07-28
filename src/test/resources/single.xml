@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="Default Suite">
+
+    <test thread-count="5" name="e2e">
+        <classes>
+            <class name="org.e2e.testcases.DemoBankIntTest">
+                <methods>
+                    <include name="should_create_a_recurring_transaction_selecting_spanish_language_successfully"/>
+                </methods>
+            </class> <!-- org.e2e.testcases.DemoBankIntTest -->
+        </classes>
+    </test> <!-- e2e -->
+</suite> <!-- Default Suite -->

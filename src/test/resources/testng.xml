@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+<suite name="Sanity" thread-count="4" parallel="true">
+<!--    parallel="methods"-->
+
+    <listeners>
+        <listener class-name="org.e2e.config.testrunner.AnnotationTransformer"/>
+    </listeners>
+
+    <test name="sanity" preserve-order="false" >
+        <groups>
+            <run>
+                <include name="sanity"/>
+<!--                <include name = "group2"></include>-->
+            </run>
+        </groups>
+        <classes>
+            <class name="org.e2e.testcases.DemoBankTest"/>
+        </classes>
+<!--        <packages>-->
+<!--            <package name="org.e2e" />-->
+<!--        </packages>-->
+
+    </test>
+</suite>
