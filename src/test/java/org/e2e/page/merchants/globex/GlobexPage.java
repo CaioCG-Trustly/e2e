@@ -2,6 +2,7 @@ package org.e2e.page.merchants.globex;
 
 import com.codeborne.selenide.Selenide;
 import com.codeborne.selenide.SelenideElement;
+import com.codeborne.selenide.SelenideWait;
 import org.e2e.config.execution.EnvBaseUrl;
 import org.e2e.config.execution.ExecutionConfig;
 import org.e2e.page.merchants.globex.components.DeveloperOptionComponent;
@@ -13,8 +14,10 @@ import java.util.List;
 import java.util.Objects;
 
 import static com.codeborne.selenide.Selenide.$;
+import static com.codeborne.selenide.Selenide.executeJavaScript;
 import static com.codeborne.selenide.Selenide.open;
 import static com.codeborne.selenide.Selenide.sleep;
+import static com.codeborne.selenide.Selenide.title;
 import static com.codeborne.selenide.Selenide.webdriver;
 
 public class GlobexPage {
@@ -51,6 +54,14 @@ public class GlobexPage {
 
     public GlobexPage selectMerchant(String merchant) {
         bySelectMerchant.selectOption(merchant);
+
+        var isPageReady = false;
+        do {
+            sleep(200);
+            isPageReady = ("Globex Demo · [" + merchant + "]").equals(title());
+
+        } while(!isPageReady);
+
         return this;
     }
 

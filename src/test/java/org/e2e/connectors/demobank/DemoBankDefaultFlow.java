@@ -8,7 +8,9 @@ import java.time.Duration;
 
 import static com.codeborne.selenide.Selectors.withText;
 import static com.codeborne.selenide.Selenide.$;
+import static com.codeborne.selenide.Selenide.sleep;
 import static com.codeborne.selenide.Selenide.switchTo;
+import static org.e2e.config.execution.ExecutionConfig.timeBetweenSteps;
 
 public class DemoBankDefaultFlow implements DemoBankDefaultLocator<DemoBankDefaultFlow>, LightboxLocator {
 
@@ -17,24 +19,28 @@ public class DemoBankDefaultFlow implements DemoBankDefaultLocator<DemoBankDefau
         switchToAuthenticationIFrame();
         byInputUserName.sendKeys(userName);
         //executeJavaScript("arguments[0].style.border='3px solid red'", byInputUserName);
+        sleep(timeBetweenSteps);
         return this;
     }
 
     @Override
     public DemoBankDefaultFlow fillPasswordWith(String password) {
         byInputPassword.sendKeys(password);
+        sleep(timeBetweenSteps);
         return this;
     }
 
     @Override
     public DemoBankDefaultFlow clickLoginButton() {
         byButtonLogin.click();
+        sleep(timeBetweenSteps);
         return this;
     }
 
     @Override
     public DemoBankDefaultFlow clickOnGoToDemoBank() {
         byButtonGoToDemoBank.click();
+        sleep(timeBetweenSteps);
         return this;
     }
 
@@ -42,13 +48,17 @@ public class DemoBankDefaultFlow implements DemoBankDefaultLocator<DemoBankDefau
     public DemoBankDefaultFlow selectAccountWithName(String accountName) {
         switchToParentIFrame();
         $(withText(accountName)).click();
+        sleep(timeBetweenSteps);
         return this;
     }
 
     @Override
     public DemoBankDefaultFlow clickOnSubmitAccount() {
+//        switchTo().frame(payWithMyBankIframe);
+//        var a = DomUtils.getCurrentIframeName();
         byButtonSubmitAccount.shouldBe(Condition.enabled);
         byButtonSubmitAccount.click();
+        sleep(timeBetweenSteps);
         return this;
     }
 
@@ -66,6 +76,7 @@ public class DemoBankDefaultFlow implements DemoBankDefaultLocator<DemoBankDefau
         byButtonSlider.click();
         byButtonSlider.shouldNotBe(Condition.visible);
 
+        sleep(timeBetweenSteps);
         return this;
     }
 

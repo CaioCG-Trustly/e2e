@@ -2,7 +2,9 @@ package org.e2e.testcases;
 
 import org.e2e.config.testrunner.LogListener;
 import org.e2e.connectors.demobank.DemoBankDefaultFlow;
+import org.e2e.flows.eox.countries.australia.EoxAuFlow;
 import org.e2e.flows.mec.countries.australia.MecAuFlow;
+import org.e2e.flows.mec.countries.canada.MecCaFlow;
 import org.e2e.flows.mec.countries.germany.IbanDeFlow;
 import org.e2e.flows.mec.countries.germany.MecDeFlow;
 import org.e2e.flows.mec.countries.greatbritish.MecGbFlow;
@@ -220,6 +222,50 @@ public class DemoBankIntTest extends BaseTest {
                     .clickOnContinueButton()
                     .fillOneTimeCode()
                     .clickOnContinueButton()
+                    .clickOnContinueButton()
+                ;
+            })
+            .waitUntilClose();
+
+        globex.waitRedirectUrl(); // TODO talvez colocar isso dentro de alguma rotina de validacao pra aplicar a todos
+
+        var redirectedUrl = webdriver().driver().url();
+        var succeeded = getQueryParam(redirectedUrl, "success");
+        var transactionId = getQueryParam(redirectedUrl, "transactionId");
+
+        context.setAttribute(context.getName() + " url", redirectedUrl);
+        context.setAttribute(context.getName() + " succeeded", succeeded);
+        context.setAttribute(context.getName() + " transactionId", transactionId);
+
+        assertEquals(succeeded, "true");
+        assertFalse(transactionId.isBlank());
+    }
+
+    @Test(groups = { "sanity" })
+    public void should_create_a_retrieval_transaction_for_au_successfully(ITestContext context) {
+        GlobexPage globex = new GlobexPage();
+        LightBoxComponent lightBoxComponent = globex
+            .load()
+            .selectMerchant("Globex (automation)")
+            .selectUseCase("Retrieval")
+            .fillAmountWith("5.00")
+            .selectUser("AU - Daniel Johns")
+            .selectLanguage("English (en)")
+            .openLightBoxInBankList();
+
+        lightBoxComponent
+            .selectBankByLogo("Westpac Banking Corporation")
+            .clickOnContinueForIban()
+            .startFlow(() -> {
+                var flow = new EoxAuFlow();
+
+                flow
+                    .clickOnContinueButton()
+                    .fillLoginId("12345678")
+                    .clickOnContinueButton()
+                    .fillOneTimeCode()
+                    .clickOnContinueButton()
+                    .selectAccountWithName("Savings account")
                     .clickOnContinueButton()
                 ;
             })
@@ -544,6 +590,54 @@ public class DemoBankIntTest extends BaseTest {
                 flow
                     .fillNameOnAccount("Caio Gava")
                     .fillRoutingNumber("124003116")
+                    .fillAccountNumber("12345678")
+                    .fillAccountNumberConfirmation("12345678")
+                    .selectAccountType("Personal - Checking")
+                    .clickOnSubmitAccountDetails()
+                    .clickOnContinue();
+            })
+            .waitUntilClose();
+
+        globex.waitRedirectUrl();
+
+        var redirectedUrl = webdriver().driver().url();
+        var succeeded = getQueryParam(redirectedUrl, "success");
+        var transactionId = getQueryParam(redirectedUrl, "transactionId");
+
+        context.setAttribute(context.getName() + " url", redirectedUrl);
+        context.setAttribute(context.getName() + " succeeded", succeeded);
+        context.setAttribute(context.getName() + " transactionId", transactionId);
+
+        assertEquals(succeeded, "true");
+        assertFalse(transactionId.isBlank());
+    }
+
+    @Test(groups = { "sanity" })
+    public void should_create_an_instant_mec_transaction_for_ca_successfully(ITestContext context) {
+        GlobexPage globex = new GlobexPage();
+        LightBoxComponent lightBoxComponent = globex
+            .load()
+            .selectMerchant("Globex (automation)")
+            .selectUseCase("Retrieval")
+            .fillAmountWith("5.00")
+            .selectUser("CA - Alanis Morissette")
+            .selectLanguage("English (en)")
+            .enableDeveloperOptionsWith((options) -> {
+                options
+                    .selectPaymentProvider("Echeck")
+                    .selectManualPaymentProviderSubtype("MED/MEC")
+                ;
+            })
+            .openLightBoxInBankList();
+
+        lightBoxComponent
+            .startFlow(() -> {
+                var flow = new MecCaFlow();
+
+                flow
+                    .fillNameOnAccount("Caio Gava")
+                    .fillTransitNumber("98392")
+                    .fillInstitutionNumber("002")
                     .fillAccountNumber("12345678")
                     .fillAccountNumberConfirmation("12345678")
                     .selectAccountType("Personal - Checking")

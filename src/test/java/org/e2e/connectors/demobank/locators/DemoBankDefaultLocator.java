@@ -1,6 +1,7 @@
 package org.e2e.connectors.demobank.locators;
 
 import com.codeborne.selenide.SelenideElement;
+import org.openqa.selenium.By;
 
 import static com.codeborne.selenide.Selenide.$;
 
@@ -12,7 +13,7 @@ public interface DemoBankDefaultLocator<T> {
     SelenideElement bySelectAccount = $("#lbx-accountList-select");
     SelenideElement byButtonSubmitAccount = $("#lbx-accountList-submit");
     SelenideElement byButtonSlider = $("#slider-button");
-    SelenideElement byButtonGoToDemoBank = $("button[class='sc-bBrNTY iWbUYS']");
+    SelenideElement byButtonGoToDemoBank = $(By.xpath("//*[@id=\"ExternalRedirect\"]/div[1]/button"));
     SelenideElement byLoginPage = $(".login-page");
     SelenideElement byWelcomeSlider = $(".welcome-slider--enabled");
 
