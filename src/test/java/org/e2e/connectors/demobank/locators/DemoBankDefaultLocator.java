@@ -7,8 +7,8 @@ import static com.codeborne.selenide.Selenide.$;
 
 public interface DemoBankDefaultLocator<T> {
     String authenticationIframe = "lbx-iframeAuthenticate";
-    SelenideElement byInputUserName = $("#lbx-formAuthenticate-inputusername");
-    SelenideElement byInputPassword = $("#lbx-formAuthenticate-inputpassword");
+    SelenideElement byInputUserName = $("#lbx-formAuthenticate-authFields-inputusername");
+    SelenideElement byInputPassword = $("#lbx-formAuthenticate-authFields-inputpassword");
     SelenideElement byButtonLogin = $("#lbx-formLogin-submit");
     SelenideElement bySelectAccount = $("#lbx-accountList-select");
     SelenideElement byButtonSubmitAccount = $("#lbx-accountList-submit");

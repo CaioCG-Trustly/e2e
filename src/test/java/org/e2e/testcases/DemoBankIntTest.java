@@ -2,6 +2,7 @@ package org.e2e.testcases;
 
 import org.e2e.config.testrunner.LogListener;
 import org.e2e.connectors.demobank.DemoBankDefaultFlow;
+import org.e2e.connectors.oauthdemobank.OAuthDemoBankFlow;
 import org.e2e.flows.eox.countries.australia.EoxAuFlow;
 import org.e2e.flows.mec.countries.australia.MecAuFlow;
 import org.e2e.flows.mec.countries.canada.MecCaFlow;
@@ -300,11 +301,14 @@ public class DemoBankIntTest extends BaseTest {
         lightBoxComponent
             .selectBank("Demo Bank")
             .startFlow(() -> {
-                var flow = new DemoBankDefaultFlow();
+                var flow = new OAuthDemoBankFlow();
 
                 flow
                     .clickOnGoToDemoBank()
-                    .clickOnSubmitAccount();
+                    .fillUserName("RandomAccounts")
+                    .fillPassword("RandomAccounts")
+                    .clickOnLogin()
+                    .clickOnPayNow();
             })
             .waitUntilClose();
 
@@ -332,12 +336,9 @@ public class DemoBankIntTest extends BaseTest {
             .fillAmountWith("5.00")
             .selectUser("DE - Franz Beckenbauer")
             .selectLanguage("English (en)")
-            .enableDeveloperOptionsWith((options) -> {
-                options
-                    .selectPaymentProvider("Echeck")
-                    .selectManualPaymentProviderSubtype("MCD")
-                ;
-            })
+            .enableDeveloperOptionsWith((options) -> options
+                .selectPaymentProvider("Manual")
+                .selectManualPaymentProviderSubtype("MCD"))
             .openLightBoxInBankList();
 
         lightBoxComponent
@@ -372,12 +373,9 @@ public class DemoBankIntTest extends BaseTest {
             .fillAmountWith("5.00")
             .selectUser("GB - Freddie Mercury")
             .selectLanguage("English (en)")
-            .enableDeveloperOptionsWith((options) -> {
-                options
-                    .selectPaymentProvider("Echeck")
-                    .selectManualPaymentProviderSubtype("MCD")
-                ;
-            })
+            .enableDeveloperOptionsWith((options) -> options
+                .selectPaymentProvider("Manual")
+                .selectManualPaymentProviderSubtype("MCD"))
             .openLightBoxThroughLogInToMyBankButton();
 
         lightBoxComponent
@@ -413,12 +411,9 @@ public class DemoBankIntTest extends BaseTest {
             .fillAmountWith("5.00")
             .selectUser("CA - Alanis Morissette")
             .selectLanguage("English (en)")
-            .enableDeveloperOptionsWith((options) -> {
-                options
-                    .selectPaymentProvider("Echeck")
-                    .selectManualPaymentProviderSubtype("MCD")
-                ;
-            })
+            .enableDeveloperOptionsWith((options) -> options
+                .selectPaymentProvider("Manual")
+                .selectManualPaymentProviderSubtype("MCD"))
             .openLightBoxInBankList();
 
         lightBoxComponent
@@ -427,7 +422,7 @@ public class DemoBankIntTest extends BaseTest {
             .fillFinancialInstitutionNumber("002")
             .fillAccountNumber("5909908")
             .selectAccountType("Personal - Checking")
-            .clickOnContinueForMcd()
+            //.clickOnContinueForMcd() TODO CHECK IF INT E UAT WORK
             .clickOnOkForDepositChallenge()
             .waitUntilClose();
 
@@ -460,12 +455,14 @@ public class DemoBankIntTest extends BaseTest {
         lightBoxComponent
             .selectBank("Demo Bank")
             .startFlow(() -> {
-                var flow = new DemoBankDefaultFlow();
+                var flow = new OAuthDemoBankFlow();
 
                 flow
                     .clickOnGoToDemoBank()
-                    .clickOnSubmitAccount();
-                ;
+                    .fillUserName("RandomAccounts")
+                    .fillPassword("RandomAccounts")
+                    .clickOnLogin()
+                    .clickOnPayNow();
             })
             .waitUntilClose();
 
@@ -575,12 +572,9 @@ public class DemoBankIntTest extends BaseTest {
             .fillAmountWith("5.00")
             .selectUser("US - John Smith")
             .selectLanguage("English (en)")
-            .enableDeveloperOptionsWith((options) -> {
-                options
-                    .selectPaymentProvider("Echeck")
-                    .selectManualPaymentProviderSubtype("MED/MEC")
-                ;
-            })
+            .enableDeveloperOptionsWith((options) -> options
+                .selectPaymentProvider("Manual")
+                .selectManualPaymentProviderSubtype("MED/MEC"))
             .openLightBoxInBankList();
 
         lightBoxComponent
@@ -622,12 +616,9 @@ public class DemoBankIntTest extends BaseTest {
             .fillAmountWith("5.00")
             .selectUser("CA - Alanis Morissette")
             .selectLanguage("English (en)")
-            .enableDeveloperOptionsWith((options) -> {
-                options
-                    .selectPaymentProvider("Echeck")
-                    .selectManualPaymentProviderSubtype("MED/MEC")
-                ;
-            })
+            .enableDeveloperOptionsWith((options) -> options
+                .selectPaymentProvider("Manual")
+                .selectManualPaymentProviderSubtype("MED/MEC"))
             .openLightBoxInBankList();
 
         lightBoxComponent
@@ -669,11 +660,9 @@ public class DemoBankIntTest extends BaseTest {
             .selectUseCase("Retrieval")
             .fillAmountWith("5.00")
             .selectUser("AU - Daniel Johns")
-            .enableDeveloperOptionsWith((options) -> {
-                options
-                    .selectPaymentProvider("Echeck")
-                    .selectManualPaymentProviderSubtype("MED/MEC");
-            })
+            .enableDeveloperOptionsWith((options) -> options
+                .selectPaymentProvider("Manual")
+                .selectManualPaymentProviderSubtype("MED/MEC"))
             .openLightBoxInBankList();
 
         lightBoxComponent
@@ -714,11 +703,9 @@ public class DemoBankIntTest extends BaseTest {
             .selectUseCase("Retrieval")
             .fillAmountWith("5.00")
             .selectUser("GB - Freddie Mercury")
-            .enableDeveloperOptionsWith((options) -> {
-                options
-                    .selectPaymentProvider("Echeck")
-                    .selectManualPaymentProviderSubtype("MED/MEC");
-            })
+            .enableDeveloperOptionsWith((options) -> options
+                .selectPaymentProvider("Manual")
+                .selectManualPaymentProviderSubtype("MED/MEC"))
             .openLightBoxThroughLogInToMyBankButton();
 
         lightBoxComponent
@@ -759,11 +746,9 @@ public class DemoBankIntTest extends BaseTest {
             .fillAmountWith("5.00")
             .selectUser("DE - Franz Beckenbauer")
             .selectLanguage("English (en)")
-            .enableDeveloperOptionsWith((options) -> {
-                options
-                    .selectPaymentProvider("Echeck")
-                    .selectManualPaymentProviderSubtype("MED/MEC");
-            })
+            .enableDeveloperOptionsWith((options) -> options
+                .selectPaymentProvider("Manual")
+                .selectManualPaymentProviderSubtype("MED/MEC"))
             .openLightBoxInBankList();
 
         lightBoxComponent
@@ -959,8 +944,8 @@ public class DemoBankIntTest extends BaseTest {
                     .fillAccountNumber("12345678")
                     .fillAccountNumberConfirmation("12345678")
                     .selectAccountType("Personal - Checking")
-                    .fillDriversLicense("124ABC")
-                    .selectState("CA")
+                    //.fillDriversLicense("124ABC") // TODO EM INT ESSES CAMPOS NAO EXIBIDOS, EM UAT SAO
+                    //.selectState("CA")
                     .clickOnSubmitAccountDetails()
                     .clickOnContinue();
             })
@@ -1124,7 +1109,7 @@ public class DemoBankIntTest extends BaseTest {
         assertFalse(transactionId.isBlank());
     }
 
-    @Test(groups = { "sanity" })
+    @Test(groups = { "sanity" }) // TODO CRIAR NOVO FLOW POIS ESSE NAO USA OS NOVOS ID #lbx-formAuthenticate-authFields-inputusername
     public void should_create_a_deferred_transaction_for_amazon_successfully(ITestContext context) {
         AmazonPage amazon = new AmazonPage();
         LightBoxComponent lightBoxComponent = amazon
@@ -1138,7 +1123,7 @@ public class DemoBankIntTest extends BaseTest {
                 var flow = new DemoBankDefaultFlow();
 
                 flow
-                    .dismissSlider()
+                    //.dismissSlider()
                     .fillUserNameWith("RandomAccounts")
                     .fillPasswordWith("RandomAccounts")
                     .clickLoginButton()
@@ -1169,7 +1154,7 @@ public class DemoBankIntTest extends BaseTest {
                 var flow = new DemoBankDefaultFlow();
 
                 flow
-                    .dismissSlider()
+                    //.dismissSlider()
                     .fillUserNameWith("RandomAccounts")
                     .fillPasswordWith("RandomAccounts")
                     .clickLoginButton();

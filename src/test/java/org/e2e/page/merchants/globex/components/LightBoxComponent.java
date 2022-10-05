@@ -52,11 +52,11 @@ public class LightBoxComponent {
 
     public LightBoxComponent searchFor(String bankName) {
         switchToLightBoxIFrame();
-        try {
-            $(".selectBank-page").should(Condition.visible, Duration.ofSeconds(10));
-        } catch (Exception e) {
-            // do nothing
-        }
+//        try {
+//            $(".selectBank-page").should(Condition.visible, Duration.ofSeconds(10));
+//        } catch (Exception e) {
+//            // do nothing
+//        }
         byInputSearchBankList.shouldBe(Condition.editable);
         byInputSearchBankList.sendKeys(bankName);
         sleep(timeBetweenSteps);
