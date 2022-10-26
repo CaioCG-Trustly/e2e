@@ -16,7 +16,7 @@
         </groups>
 <!--        <classes>-->
 <!--            <class name="org.e2e.testcases.DemoBankIntTest"/>-->
-<!--            <class name="org.e2e.testcases.OAuthDemoBankTest"/>-->
+<!--            <class name="org.e2e.testcases.instant.OAuthDemoBankTest"/>-->
 <!--        </classes>-->
         <packages>
             <package name="org.e2e.testcases" />

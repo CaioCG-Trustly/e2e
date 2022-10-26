@@ -1,9 +1,10 @@
-package org.e2e.testcases;
+package org.e2e.testcases.instant;
 
 import org.e2e.config.testrunner.LogListener;
 import org.e2e.connectors.oauthdemobank.OAuthDemoBankFlow;
 import org.e2e.page.merchants.globex.GlobexPage;
 import org.e2e.page.merchants.globex.components.LightBoxComponent;
+import org.e2e.testcases.BaseTest;
 import org.testng.ITestContext;
 import org.testng.annotations.Listeners;
 import org.testng.annotations.Test;
