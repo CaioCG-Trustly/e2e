@@ -1,6 +1,7 @@
 package org.e2e.page.merchants.globex.components;
 
 import com.codeborne.selenide.SelenideElement;
+import org.openqa.selenium.By;
 
 import static com.codeborne.selenide.Selenide.$;
 import static com.codeborne.selenide.Selenide.switchTo;
@@ -27,6 +28,12 @@ public class WidgetComponent {
     public LightBoxComponent clickLogInToMyBank() {
         switchToWidgetIFrame();
         byButtonLogInToMyBanks.click();
+        return lightBoxComponent;
+    }
+
+    public LightBoxComponent clickByBankLogoName(String bankName) {
+        switchToWidgetIFrame();
+        $(By.xpath("//img[@alt='" + bankName + "']")).click();
         return lightBoxComponent;
     }
 

@@ -2,7 +2,6 @@ package org.e2e.page.merchants.globex;
 
 import com.codeborne.selenide.Selenide;
 import com.codeborne.selenide.SelenideElement;
-import com.codeborne.selenide.SelenideWait;
 import org.e2e.config.execution.EnvBaseUrl;
 import org.e2e.config.execution.ExecutionConfig;
 import org.e2e.page.merchants.globex.components.DeveloperOptionComponent;
@@ -14,7 +13,6 @@ import java.util.List;
 import java.util.Objects;
 
 import static com.codeborne.selenide.Selenide.$;
-import static com.codeborne.selenide.Selenide.executeJavaScript;
 import static com.codeborne.selenide.Selenide.open;
 import static com.codeborne.selenide.Selenide.sleep;
 import static com.codeborne.selenide.Selenide.title;
@@ -31,6 +29,8 @@ public class GlobexPage {
     static final SelenideElement bySelectCurrency = $(By.xpath("//select[@name='currency']"));
     static final SelenideElement bySelectLanguage = $(By.xpath("//select[@name='language']"));
     static final SelenideElement byCheckBoxDeveloperOptions = $(".customCheckBox:nth-child(1) > span");
+    static final SelenideElement byInputCustomerName = $("#customerName");
+    static final SelenideElement byButtonSetCustomer = $("#customer-set");
 
     final String url;
     final DeveloperOptionComponent developerOptionComponent;
@@ -86,6 +86,17 @@ public class GlobexPage {
         return this;
     }
 
+    public GlobexPage fillUserName(String name) {
+        byInputCustomerName.clear();
+        byInputCustomerName.sendKeys(name);
+        return this;
+    }
+
+    public GlobexPage clickOnSetCustomer() {
+        byButtonSetCustomer.click();
+        return this;
+    }
+
     public GlobexPage selectCurrency(String currency) {
         bySelectCurrency.selectOption(currency);
         return this;
@@ -105,6 +116,11 @@ public class GlobexPage {
     public LightBoxComponent openLightBoxInBankList() {
         return widgetComponent
             .clickAllOtherBanks();
+    }
+
+    public LightBoxComponent openLightBoxByBankLogoName(String bankName) {
+        return widgetComponent
+            .clickByBankLogoName(bankName);
     }
 
     public LightBoxComponent openLightBoxThroughLogInToMyBankButton() {
