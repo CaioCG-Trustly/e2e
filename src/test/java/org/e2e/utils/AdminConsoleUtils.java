@@ -22,7 +22,7 @@ public class AdminConsoleUtils {
 
     public static void loginAdminConsole() {
         String body = "username=" + adminConsoleUser + "&password=" + adminConsolePassword + "&remember=true&timezone=America/Sao_Paulo&originalUrl=/transactions";
-        String url = handleBaseUrl() + "/home/login";
+        String url = handleBaseUrl() + "/admin-console/home/login";
         String authLogin = "";
 
         try {
@@ -60,8 +60,6 @@ public class AdminConsoleUtils {
             .addHeader("Cookie", cookieValue)
             .build();
 
-        Response response = client.newCall(request).execute();
-
-        return response;
+        return client.newCall(request).execute();
     }
 }

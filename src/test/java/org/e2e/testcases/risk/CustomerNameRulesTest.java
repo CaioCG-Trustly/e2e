@@ -1,25 +1,24 @@
 package org.e2e.testcases.risk;
 
-import org.e2e.config.testrunner.LogListener;
 import org.e2e.connectors.demobank.DemoBankDefaultFlow;
+import org.e2e.page.adminconsole.AdminConsolePage;
 import org.e2e.page.merchants.globex.GlobexPage;
 import org.e2e.page.merchants.globex.components.LightBoxComponent;
 import org.e2e.testcases.BaseTest;
 import org.e2e.utils.AdminConsoleUtils;
-import org.testng.ITestContext;
-import org.testng.annotations.Listeners;
 import org.testng.annotations.Test;
 
+import static com.codeborne.selenide.Selenide.open;
 import static com.codeborne.selenide.Selenide.webdriver;
 import static org.e2e.utils.UrlUtils.getQueryParam;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
-@Listeners(LogListener.class)
 public class CustomerNameRulesTest extends BaseTest {
 
-    @Test(groups = {"sanity"})
-    public void should_xxxxxxx_successfully(ITestContext context) {
+    @Test(groups = {"risk_name_matching"})
+    public void should_xxxxxxx_successfully() {
         GlobexPage globex = new GlobexPage();
         LightBoxComponent lightBoxComponent = globex
             .load()
@@ -52,15 +51,1667 @@ public class CustomerNameRulesTest extends BaseTest {
         var succeeded = getQueryParam(redirectedUrl, "success");
         var transactionId = getQueryParam(redirectedUrl, "transactionId");
 
-        context.setAttribute(context.getName() + " url", redirectedUrl);
-        context.setAttribute(context.getName() + " succeeded", succeeded);
-        context.setAttribute(context.getName() + " transactionId", transactionId);
+        assertEquals(succeeded, "true");
+        assertFalse(transactionId.isBlank());
+
+        AdminConsoleUtils.loginAdminConsole();
+
+        AdminConsolePage adminConsole = new AdminConsolePage();
+        adminConsole
+            .loadInTransactionDetailsPage("1096810010")
+            .goToEventsTab()
+            .assertThat((transactionDetailsPage) -> {
+                var attributes = transactionDetailsPage.eventsTab.getAttributesByEventType("VerifyCustomer");
+
+                assertTrue(attributes.contains("customer.name: PartialMatch"));
+            })
+            .goToTransactionTab()
+            .assertThat((transactionDetailsPage) -> {
+                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+
+                assertEquals(statusCode, "AC102");
+            })
+        ;
+    }
+
+    @Test(groups = {"risk_name_matching"})
+    public void scenario_2() {
+        GlobexPage globex = new GlobexPage();
+        LightBoxComponent lightBoxComponent = globex
+            .load()
+            .selectMerchant("Globex Demo")
+            .selectUseCase("Instant")
+            .fillAmountWith("5.00")
+            .selectUser("US - John Smith")
+            .selectLanguage("English (en)")
+            .openLightBoxThroughInputSearch("Demo Bank");
+
+
+        lightBoxComponent
+            .switchToLightBoxIFrame()
+            .startFlow(() -> {
+                var flow = new DemoBankDefaultFlow();
+
+                flow
+                    .dismissSlider()
+                    .fillUserNameWith("AccountProfile")
+                    .fillPasswordWith("AccountProfile")
+                    .clickLoginButton()
+                    .selectAccountWithName("Business Demo Account") // TODO CHECAR COM A PRI, SE TROCA DE CONTA A VALIDACAO DE NOME ACONTECE
+                    .clickOnSubmitAccount();
+            })
+            .waitUntilClose();
+
+        globex.waitRedirectUrl();
+
+        var redirectedUrl = webdriver().driver().url();
+        var succeeded = getQueryParam(redirectedUrl, "success");
+        var transactionId = getQueryParam(redirectedUrl, "transactionId");
 
         assertEquals(succeeded, "true");
         assertFalse(transactionId.isBlank());
 
         AdminConsoleUtils.loginAdminConsole();
+
+        AdminConsolePage adminConsole = new AdminConsolePage();
+        adminConsole
+            .loadInTransactionDetailsPage(transactionId)
+            .goToEventsTab()
+            .assertThat((transactionDetailsPage) -> {
+                var attributes = transactionDetailsPage.eventsTab.getAttributesByEventType("VerifyCustomer");
+
+                assertFalse(attributes.contains("customer.name"));
+            })
+            .goToTransactionTab()
+            .assertThat((transactionDetailsPage) -> {
+                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+
+                assertEquals(statusCode, "AC118");
+            });
     }
 
+    @Test(groups = {"risk_name_matching"})
+    public void scenario_3_variant_john_smith_II() {
+        GlobexPage globex = new GlobexPage();
+        LightBoxComponent lightBoxComponent = globex
+            .load()
+            .selectMerchant("Globex Demo")
+            .selectUseCase("Instant")
+            .fillAmountWith("5.00")
+            .selectUser("US - John Smith") // setting up information before changing to "Custom"
+            .selectUser("Custom")
+            .fillUserName("John Smith II")
+            .clickOnSetCustomer()
+            .selectLanguage("English (en)")
+            .openLightBoxThroughInputSearch("Demo Bank");
+
+        lightBoxComponent
+            .switchToLightBoxIFrame()
+            .startFlow(() -> {
+                var flow = new DemoBankDefaultFlow();
+
+                flow
+                    .dismissSlider()
+                    .fillUserNameWith("RandomAccounts")
+                    .fillPasswordWith("RandomAccounts")
+                    .clickLoginButton()
+                    .selectAccountWithName("Random Savings Account")
+                    .clickOnSubmitAccount();
+            })
+            .waitUntilClose();
+
+        globex.waitRedirectUrl();
+
+        var redirectedUrl = webdriver().driver().url();
+        var succeeded = getQueryParam(redirectedUrl, "success");
+        var transactionId = getQueryParam(redirectedUrl, "transactionId");
+
+        assertEquals(succeeded, "true");
+        assertFalse(transactionId.isBlank());
+
+        AdminConsoleUtils.loginAdminConsole();
+
+        AdminConsolePage adminConsole = new AdminConsolePage();
+        adminConsole
+            .loadInTransactionDetailsPage(transactionId)
+            .goToEventsTab()
+            .assertThat((transactionDetailsPage) -> {
+                var attributes = transactionDetailsPage.eventsTab.getAttributesByEventType("VerifyCustomer");
+
+                assertTrue(attributes.contains("customer.name: PartialMatch"));
+            })
+            .goToTransactionTab()
+            .assertThat((transactionDetailsPage) -> {
+                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+
+                assertEquals(statusCode, "AC118");
+            });
+    }
+
+    @Test(groups = {"risk_name_matching"})
+    public void scenario_3_variant_johnny_smith_II() {
+        GlobexPage globex = new GlobexPage();
+        LightBoxComponent lightBoxComponent = globex
+            .load()
+            .selectMerchant("Globex Demo")
+            .selectUseCase("Instant")
+            .fillAmountWith("5.00")
+            .selectUser("US - John Smith") // setting up information before changing to "Custom"
+            .selectUser("Custom")
+            .fillUserName("Johnny Smith II")
+            .clickOnSetCustomer()
+            .selectLanguage("English (en)")
+            .openLightBoxThroughInputSearch("Demo Bank");
+
+        lightBoxComponent
+            .switchToLightBoxIFrame()
+            .startFlow(() -> {
+                var flow = new DemoBankDefaultFlow();
+
+                flow
+                    .dismissSlider()
+                    .fillUserNameWith("RandomAccounts")
+                    .fillPasswordWith("RandomAccounts")
+                    .clickLoginButton()
+                    .selectAccountWithName("Random Savings Account")
+                    .clickOnSubmitAccount();
+            })
+            .waitUntilClose();
+
+        globex.waitRedirectUrl();
+
+        var redirectedUrl = webdriver().driver().url();
+        var succeeded = getQueryParam(redirectedUrl, "success");
+        var transactionId = getQueryParam(redirectedUrl, "transactionId");
+
+        assertEquals(succeeded, "true");
+        assertFalse(transactionId.isBlank());
+
+        open("https://uat.paywithmybank.com/admin-console");
+        AdminConsoleUtils.loginAdminConsole();
+
+        AdminConsolePage adminConsole = new AdminConsolePage();
+        adminConsole
+            .loadInTransactionDetailsPage(transactionId)
+            .goToEventsTab()
+            .assertThat((transactionDetailsPage) -> {
+                var attributes = transactionDetailsPage.eventsTab.getAttributesByEventType("VerifyCustomer");
+
+                assertTrue(attributes.contains("customer.name: PartialMatch"));
+            })
+            .goToTransactionTab()
+            .assertThat((transactionDetailsPage) -> {
+                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+
+                assertEquals(statusCode, "AC118");
+            })
+        ;
+    }
+
+    @Test(groups = {"risk_name_matching"})
+    public void scenario_3_variant_dr_john_smith() {
+        GlobexPage globex = new GlobexPage();
+        LightBoxComponent lightBoxComponent = globex
+            .load()
+            .selectMerchant("Globex Demo")
+            .selectUseCase("Instant")
+            .fillAmountWith("5.00")
+            .selectUser("US - John Smith") // setting up information before changing to "Custom"
+            .selectUser("Custom")
+            .fillUserName("Dr. John Smith")
+            .clickOnSetCustomer()
+            .selectLanguage("English (en)")
+            .openLightBoxThroughInputSearch("Demo Bank");
+
+        lightBoxComponent
+            .switchToLightBoxIFrame()
+            .startFlow(() -> {
+                var flow = new DemoBankDefaultFlow();
+
+                flow
+                    .dismissSlider()
+                    .fillUserNameWith("RandomAccounts")
+                    .fillPasswordWith("RandomAccounts")
+                    .clickLoginButton()
+                    .selectAccountWithName("Random Savings Account")
+                    .clickOnSubmitAccount();
+            })
+            .waitUntilClose();
+
+        globex.waitRedirectUrl();
+
+        var redirectedUrl = webdriver().driver().url();
+        var succeeded = getQueryParam(redirectedUrl, "success");
+        var transactionId = getQueryParam(redirectedUrl, "transactionId");
+
+        assertEquals(succeeded, "true");
+        assertFalse(transactionId.isBlank());
+
+        AdminConsoleUtils.loginAdminConsole();
+
+        AdminConsolePage adminConsole = new AdminConsolePage();
+        adminConsole
+            .loadInTransactionDetailsPage(transactionId)
+            .goToEventsTab()
+            .assertThat((transactionDetailsPage) -> {
+                var attributes = transactionDetailsPage.eventsTab.getAttributesByEventType("VerifyCustomer");
+
+                assertTrue(attributes.contains("customer.name: PartialMatch"));
+            })
+            .goToTransactionTab()
+            .assertThat((transactionDetailsPage) -> {
+                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+
+                assertEquals(statusCode, "AC118");
+            });
+    }
+
+    @Test(groups = {"risk_name_matching"})
+    public void scenario_4_variant_johnny() {
+        GlobexPage globex = new GlobexPage();
+        LightBoxComponent lightBoxComponent = globex
+            .load()
+            .selectMerchant("Globex Demo")
+            .selectUseCase("Instant")
+            .fillAmountWith("5.00")
+            .selectUser("US - John Smith") // setting up information before changing to "Custom"
+            .selectUser("Custom")
+            .fillUserName("Johnny")
+            .clickOnSetCustomer()
+            .selectLanguage("English (en)")
+            .openLightBoxThroughInputSearch("Demo Bank");
+
+        lightBoxComponent
+            .switchToLightBoxIFrame()
+            .startFlow(() -> {
+                var flow = new DemoBankDefaultFlow();
+
+                flow
+                    .dismissSlider()
+                    .fillUserNameWith("RandomAccounts")
+                    .fillPasswordWith("RandomAccounts")
+                    .clickLoginButton()
+                    .selectAccountWithName("Random Savings Account")
+                    .clickOnSubmitAccount();
+            })
+            .waitUntilClose();
+
+        globex.waitRedirectUrl();
+
+        var redirectedUrl = webdriver().driver().url();
+        var succeeded = getQueryParam(redirectedUrl, "success");
+        var transactionId = getQueryParam(redirectedUrl, "transactionId");
+
+        assertEquals(succeeded, "true");
+        assertFalse(transactionId.isBlank());
+
+        AdminConsoleUtils.loginAdminConsole();
+
+        AdminConsolePage adminConsole = new AdminConsolePage();
+        adminConsole
+            .loadInTransactionDetailsPage(transactionId)
+            .goToEventsTab()
+            .assertThat((transactionDetailsPage) -> {
+                var attributes = transactionDetailsPage.eventsTab.getAttributesByEventType("VerifyCustomer");
+
+                assertTrue(attributes.contains("customer.name: NoMatch"));
+            })
+            .goToTransactionTab()
+            .assertThat((transactionDetailsPage) -> {
+                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+
+                assertEquals(statusCode, "AC118");
+            });
+    }
+
+    @Test(groups = {"risk_name_matching"})
+    public void scenario_4_variant_john_johnny_smith() {
+        GlobexPage globex = new GlobexPage();
+        LightBoxComponent lightBoxComponent = globex
+            .load()
+            .selectMerchant("Globex Demo")
+            .selectUseCase("Instant")
+            .fillAmountWith("5.00")
+            .selectUser("US - John Smith") // setting up information before changing to "Custom"
+            .selectUser("Custom")
+            .fillUserName("John Johnny Smith")
+            .clickOnSetCustomer()
+            .selectLanguage("English (en)")
+            .openLightBoxThroughInputSearch("Demo Bank");
+
+        lightBoxComponent
+            .switchToLightBoxIFrame()
+            .startFlow(() -> {
+                var flow = new DemoBankDefaultFlow();
+
+                flow
+                    .dismissSlider()
+                    .fillUserNameWith("RandomAccounts")
+                    .fillPasswordWith("RandomAccounts")
+                    .clickLoginButton()
+                    .selectAccountWithName("Random Savings Account")
+                    .clickOnSubmitAccount();
+            })
+            .waitUntilClose();
+
+        globex.waitRedirectUrl();
+
+        var redirectedUrl = webdriver().driver().url();
+        var succeeded = getQueryParam(redirectedUrl, "success");
+        var transactionId = getQueryParam(redirectedUrl, "transactionId");
+
+        assertEquals(succeeded, "true");
+        assertFalse(transactionId.isBlank());
+
+        AdminConsoleUtils.loginAdminConsole();
+
+        AdminConsolePage adminConsole = new AdminConsolePage();
+        adminConsole
+            .loadInTransactionDetailsPage(transactionId)
+            .goToEventsTab()
+            .assertThat((transactionDetailsPage) -> {
+                var attributes = transactionDetailsPage.eventsTab.getAttributesByEventType("VerifyCustomer");
+
+                assertTrue(attributes.contains("customer.name: PartialMatch"));
+            })
+            .goToTransactionTab()
+            .assertThat((transactionDetailsPage) -> {
+                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+
+                assertEquals(statusCode, "AC118");
+            });
+    }
+
+    @Test(groups = {"risk_name_matching"})
+    public void scenario_5_variant_john_smith_alfredo() {
+        GlobexPage globex = new GlobexPage();
+        LightBoxComponent lightBoxComponent = globex
+            .load()
+            .selectMerchant("Globex Demo")
+            .selectUseCase("Instant")
+            .fillAmountWith("5.00")
+            .selectUser("US - John Smith") // setting up information before changing to "Custom"
+            .selectUser("Custom")
+            .fillUserName("John Smith Alfredo")
+            .clickOnSetCustomer()
+            .selectLanguage("English (en)")
+            .openLightBoxThroughInputSearch("Demo Bank");
+
+        lightBoxComponent
+            .switchToLightBoxIFrame()
+            .startFlow(() -> {
+                var flow = new DemoBankDefaultFlow();
+
+                flow
+                    .dismissSlider()
+                    .fillUserNameWith("RandomAccounts")
+                    .fillPasswordWith("RandomAccounts")
+                    .clickLoginButton()
+                    .selectAccountWithName("Random Savings Account")
+                    .clickOnSubmitAccount();
+            })
+            .waitUntilClose();
+
+        globex.waitRedirectUrl();
+
+        var redirectedUrl = webdriver().driver().url();
+        var succeeded = getQueryParam(redirectedUrl, "success");
+        var transactionId = getQueryParam(redirectedUrl, "transactionId");
+
+        assertEquals(succeeded, "true");
+        assertFalse(transactionId.isBlank());
+
+        AdminConsoleUtils.loginAdminConsole();
+
+        AdminConsolePage adminConsole = new AdminConsolePage();
+        adminConsole
+            .loadInTransactionDetailsPage(transactionId)
+            .goToEventsTab()
+            .assertThat((transactionDetailsPage) -> {
+                var attributes = transactionDetailsPage.eventsTab.getAttributesByEventType("VerifyCustomer");
+
+                assertTrue(attributes.contains("customer.name: PartialMatch"));
+            })
+            .goToTransactionTab()
+            .assertThat((transactionDetailsPage) -> {
+                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+
+                assertEquals(statusCode, "AC118");
+            });
+    }
+
+    @Test(groups = {"risk_name_matching"})
+    public void scenario_5_variant_johnny_smith_alfredo() {
+        GlobexPage globex = new GlobexPage();
+        LightBoxComponent lightBoxComponent = globex
+            .load()
+            .selectMerchant("Globex Demo")
+            .selectUseCase("Instant")
+            .fillAmountWith("5.00")
+            .selectUser("US - John Smith") // setting up information before changing to "Custom"
+            .selectUser("Custom")
+            .fillUserName("Johnny Smith Alfredo")
+            .clickOnSetCustomer()
+            .selectLanguage("English (en)")
+            .openLightBoxThroughInputSearch("Demo Bank");
+
+        lightBoxComponent
+            .switchToLightBoxIFrame()
+            .startFlow(() -> {
+                var flow = new DemoBankDefaultFlow();
+
+                flow
+                    .dismissSlider()
+                    .fillUserNameWith("RandomAccounts")
+                    .fillPasswordWith("RandomAccounts")
+                    .clickLoginButton()
+                    .selectAccountWithName("Random Savings Account")
+                    .clickOnSubmitAccount();
+            })
+            .waitUntilClose();
+
+        globex.waitRedirectUrl();
+
+        var redirectedUrl = webdriver().driver().url();
+        var succeeded = getQueryParam(redirectedUrl, "success");
+        var transactionId = getQueryParam(redirectedUrl, "transactionId");
+
+        assertEquals(succeeded, "true");
+        assertFalse(transactionId.isBlank());
+
+        AdminConsoleUtils.loginAdminConsole();
+
+        AdminConsolePage adminConsole = new AdminConsolePage();
+        adminConsole
+            .loadInTransactionDetailsPage(transactionId)
+            .goToEventsTab()
+            .assertThat((transactionDetailsPage) -> {
+                var attributes = transactionDetailsPage.eventsTab.getAttributesByEventType("VerifyCustomer");
+
+                assertTrue(attributes.contains("customer.name: PartialMatch"));
+            })
+            .goToTransactionTab()
+            .assertThat((transactionDetailsPage) -> {
+                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+
+                assertEquals(statusCode, "AC118");
+            });
+    }
+
+    @Test(groups = {"risk_name_matching"})
+    // TODO CHECAR COM PRISCILA, NAO ESTA FUNCIONANDO EM UAT MESMO COM O FORCE CHECADO
+    public void scenario_5_variant_sarah_smith_alfredo() {
+        GlobexPage globex = new GlobexPage();
+        LightBoxComponent lightBoxComponent = globex
+            .load()
+            .selectMerchant("Globex Demo")
+            .selectUseCase("Instant")
+            .fillAmountWith("5.00")
+            .selectUser("US - John Smith") // setting up information before changing to "Custom"
+            .selectUser("Custom")
+            .fillUserName("Sarah Smith Alfredo")
+            .clickOnSetCustomer()
+            .selectLanguage("English (en)")
+            .openLightBoxThroughInputSearch("Demo Bank");
+
+        lightBoxComponent
+            .switchToLightBoxIFrame()
+            .startFlow(() -> {
+                var flow = new DemoBankDefaultFlow();
+
+                flow
+                    .dismissSlider()
+                    .fillUserNameWith("RandomAccounts")
+                    .fillPasswordWith("RandomAccounts")
+                    .clickLoginButton()
+                    .selectAccountWithName("Random Savings Account")
+                    .clickOnSubmitAccount();
+            })
+            .waitUntilClose();
+
+        globex.waitRedirectUrl();
+
+        var redirectedUrl = webdriver().driver().url();
+        var succeeded = getQueryParam(redirectedUrl, "success");
+        var transactionId = getQueryParam(redirectedUrl, "transactionId");
+
+        assertEquals(succeeded, "true");
+        assertFalse(transactionId.isBlank());
+
+        AdminConsoleUtils.loginAdminConsole();
+
+        AdminConsolePage adminConsole = new AdminConsolePage();
+        adminConsole
+            .loadInTransactionDetailsPage(transactionId)
+            .goToEventsTab()
+            .assertThat((transactionDetailsPage) -> {
+                var attributes = transactionDetailsPage.eventsTab.getAttributesByEventType("VerifyCustomer");
+
+                assertTrue(attributes.contains("customer.name: NoMatch"));
+            })
+            .goToTransactionTab()
+            .assertThat((transactionDetailsPage) -> {
+                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+
+                assertEquals(statusCode, "AC118");
+            });
+    }
+
+    @Test(groups = {"risk_name_matching"})
+    public void scenario_6_variant_mary_allie_smith() {
+        GlobexPage globex = new GlobexPage();
+        LightBoxComponent lightBoxComponent = globex
+            .load()
+            .selectMerchant("Globex Demo")
+            .selectUseCase("Instant")
+            .fillAmountWith("5.00")
+            .selectUser("US - John Smith") // setting up information before changing to "Custom"
+            .selectUser("Custom")
+            .fillUserName("Mary Allie Smith")
+            .clickOnSetCustomer()
+            .selectLanguage("English (en)")
+            .openLightBoxThroughInputSearch("Demo Bank");
+
+        lightBoxComponent
+            .switchToLightBoxIFrame()
+            .startFlow(() -> {
+                var flow = new DemoBankDefaultFlow();
+
+                flow
+                    .dismissSlider()
+                    .fillUserNameWith("CustomerWithSecondName")
+                    .fillPasswordWith("CustomerWithSecondName")
+                    .clickLoginButton()
+                    .selectAccountWithName("Demo Savings Account")
+                    .clickOnSubmitAccount();
+            })
+            .waitUntilClose();
+
+        globex.waitRedirectUrl();
+
+        var redirectedUrl = webdriver().driver().url();
+        var succeeded = getQueryParam(redirectedUrl, "success");
+        var transactionId = getQueryParam(redirectedUrl, "transactionId");
+
+        assertEquals(succeeded, "true");
+        assertFalse(transactionId.isBlank());
+
+        AdminConsoleUtils.loginAdminConsole();
+
+        AdminConsolePage adminConsole = new AdminConsolePage();
+        adminConsole
+            .loadInTransactionDetailsPage(transactionId)
+            .goToEventsTab()
+            .assertThat((transactionDetailsPage) -> {
+                var attributes = transactionDetailsPage.eventsTab.getAttributesByEventType("VerifyCustomer");
+
+                assertTrue(attributes.contains("customer.name: FullMatch"));
+            })
+            .goToTransactionTab()
+            .assertThat((transactionDetailsPage) -> {
+                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+
+                assertEquals(statusCode, "AC118");
+            });
+    }
+
+    @Test(groups = {"risk_name_matching"})
+    // TODO CHECAR COM PRI. NA IMAGEM A TRANSACAO EH INTERROMPIDA. AQUI ELA ACONTECE COM SUCESSO E NOMATCH
+    public void scenario_6_variant_maria_alice_smith() {
+        GlobexPage globex = new GlobexPage();
+        LightBoxComponent lightBoxComponent = globex
+            .load()
+            .selectMerchant("Globex Demo")
+            .selectUseCase("Instant")
+            .fillAmountWith("5.00")
+            .selectUser("US - John Smith") // setting up information before changing to "Custom"
+            .selectUser("Custom")
+            .fillUserName("Maria Alice Smith")
+            .clickOnSetCustomer()
+            .selectLanguage("English (en)")
+            .openLightBoxThroughInputSearch("Demo Bank");
+
+        lightBoxComponent
+            .switchToLightBoxIFrame()
+            .startFlow(() -> {
+                var flow = new DemoBankDefaultFlow();
+
+                flow
+                    .dismissSlider()
+                    .fillUserNameWith("CustomerWithSecondName")
+                    .fillPasswordWith("CustomerWithSecondName")
+                    .clickLoginButton()
+                    .selectAccountWithName("Demo Savings Account")
+                    .clickOnSubmitAccount();
+            })
+            .waitUntilClose();
+
+        globex.waitRedirectUrl();
+
+        var redirectedUrl = webdriver().driver().url();
+        var succeeded = getQueryParam(redirectedUrl, "success");
+        var transactionId = getQueryParam(redirectedUrl, "transactionId");
+
+        assertEquals(succeeded, "true");
+        assertFalse(transactionId.isBlank());
+
+        AdminConsoleUtils.loginAdminConsole();
+
+        AdminConsolePage adminConsole = new AdminConsolePage();
+        adminConsole
+            .loadInTransactionDetailsPage(transactionId)
+            .goToEventsTab()
+            .assertThat((transactionDetailsPage) -> {
+                var attributes = transactionDetailsPage.eventsTab.getAttributesByEventType("VerifyCustomer");
+
+                assertTrue(attributes.contains("customer.name: NoMatch"));
+            })
+            .goToTransactionTab()
+            .assertThat((transactionDetailsPage) -> {
+                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+
+                assertEquals(statusCode, "AC118");
+            });
+    }
+
+    @Test(groups = {"risk_name_matching"})
+    // TODO CHECAR COM PRI. NA IMAGEM A TRANSACAO EH INTERROMPIDA. AQUI ELA ACONTECE COM SUCESSO E NOMATCH
+    public void scenario_6_variant_maria_lisa_von() {
+        GlobexPage globex = new GlobexPage();
+        LightBoxComponent lightBoxComponent = globex
+            .load()
+            .selectMerchant("Globex Demo")
+            .selectUseCase("Instant")
+            .fillAmountWith("5.00")
+            .selectUser("US - John Smith") // setting up information before changing to "Custom"
+            .selectUser("Custom")
+            .fillUserName("Maria Lisa Von")
+            .clickOnSetCustomer()
+            .selectLanguage("English (en)")
+            .openLightBoxThroughInputSearch("Demo Bank");
+
+        lightBoxComponent
+            .switchToLightBoxIFrame()
+            .startFlow(() -> {
+                var flow = new DemoBankDefaultFlow();
+
+                flow
+                    .dismissSlider()
+                    .fillUserNameWith("CustomerWithSecondName")
+                    .fillPasswordWith("CustomerWithSecondName")
+                    .clickLoginButton()
+                    .selectAccountWithName("Demo Savings Account")
+                    .clickOnSubmitAccount();
+            })
+            .waitUntilClose();
+
+        globex.waitRedirectUrl();
+
+        var redirectedUrl = webdriver().driver().url();
+        var succeeded = getQueryParam(redirectedUrl, "success");
+        var transactionId = getQueryParam(redirectedUrl, "transactionId");
+
+        assertEquals(succeeded, "true");
+        assertFalse(transactionId.isBlank());
+
+        AdminConsoleUtils.loginAdminConsole();
+
+        AdminConsolePage adminConsole = new AdminConsolePage();
+        adminConsole
+            .loadInTransactionDetailsPage(transactionId)
+            .goToEventsTab()
+            .assertThat((transactionDetailsPage) -> {
+                var attributes = transactionDetailsPage.eventsTab.getAttributesByEventType("VerifyCustomer");
+
+                assertTrue(attributes.contains("customer.name: NoMatch"));
+            })
+            .goToTransactionTab()
+            .assertThat((transactionDetailsPage) -> {
+                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+
+                assertEquals(statusCode, "AC118");
+            });
+    }
+
+    @Test(groups = {"risk_name_matching"})
+    // TODO CHECAR COM PRI. NA IMAGEM A TRANSACAO EH INTERROMPIDA. AQUI ELA ACONTECE COM SUCESSO E NOMATCH
+    public void scenario_7_variant_john_von_and_matching_zip_code() {
+        GlobexPage globex = new GlobexPage();
+        LightBoxComponent lightBoxComponent = globex
+            .load()
+            .selectMerchant("Globex Demo")
+            .selectUseCase("Instant")
+            .fillAmountWith("5.00")
+            .selectUser("US - John Smith") // setting up information before changing to "Custom"
+            .selectUser("Custom")
+            .fillUserName("John Von")
+            .fillZipCode("90210")
+            .clickOnSetCustomer()
+            .selectLanguage("English (en)")
+            .openLightBoxThroughInputSearch("Demo Bank");
+
+        lightBoxComponent
+            .switchToLightBoxIFrame()
+            .startFlow(() -> {
+                var flow = new DemoBankDefaultFlow();
+
+                flow
+                    .dismissSlider()
+                    .fillUserNameWith("CustomerWithSecondName")
+                    .fillPasswordWith("CustomerWithSecondName")
+                    .clickLoginButton()
+                    .selectAccountWithName("Demo Savings Account")
+                    .clickOnSubmitAccount();
+            })
+            .waitUntilClose();
+
+        globex.waitRedirectUrl();
+
+        var redirectedUrl = webdriver().driver().url();
+        var succeeded = getQueryParam(redirectedUrl, "success");
+        var transactionId = getQueryParam(redirectedUrl, "transactionId");
+
+        assertEquals(succeeded, "true");
+        assertFalse(transactionId.isBlank());
+
+        AdminConsoleUtils.loginAdminConsole();
+
+        AdminConsolePage adminConsole = new AdminConsolePage();
+        adminConsole
+            .loadInTransactionDetailsPage(transactionId)
+            .goToEventsTab()
+            .assertThat((transactionDetailsPage) -> {
+                var attributes = transactionDetailsPage.eventsTab.getAttributesByEventType("VerifyCustomer");
+
+                assertTrue(attributes.contains("customer.name: NoMatch"));
+            })
+            .goToTransactionTab()
+            .assertThat((transactionDetailsPage) -> {
+                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+
+                assertEquals(statusCode, "AC118");
+            });
+    }
+
+    @Test(groups = {"risk_name_matching"})
+    // TODO CHECAR COM PRI. NA IMAGEM A TRANSACAO EH INTERROMPIDA. AQUI ELA ACONTECE COM SUCESSO E NOMATCH
+    public void scenario_7_variant_john_smith_and_no_matching_zip_code() {
+        GlobexPage globex = new GlobexPage();
+        LightBoxComponent lightBoxComponent = globex
+            .load()
+            .selectMerchant("Globex Demo")
+            .selectUseCase("Instant")
+            .fillAmountWith("5.00")
+            .selectUser("US - John Smith") // setting up information before changing to "Custom"
+            .selectUser("Custom")
+            .fillUserName("John Smith")
+            .fillZipCode("90111")
+            .clickOnSetCustomer()
+            .selectLanguage("English (en)")
+            .openLightBoxThroughInputSearch("Demo Bank");
+
+        lightBoxComponent
+            .switchToLightBoxIFrame()
+            .startFlow(() -> {
+                var flow = new DemoBankDefaultFlow();
+
+                flow
+                    .dismissSlider()
+                    .fillUserNameWith("RandomAccounts")
+                    .fillPasswordWith("RandomAccounts")
+                    .clickLoginButton()
+                    .selectAccountWithName("Random Savings Account")
+                    .clickOnSubmitAccount();
+            })
+            .waitUntilClose();
+
+        globex.waitRedirectUrl();
+
+        var redirectedUrl = webdriver().driver().url();
+        var succeeded = getQueryParam(redirectedUrl, "success");
+        var transactionId = getQueryParam(redirectedUrl, "transactionId");
+
+        assertEquals(succeeded, "true");
+        assertFalse(transactionId.isBlank());
+
+        AdminConsoleUtils.loginAdminConsole();
+
+        AdminConsolePage adminConsole = new AdminConsolePage();
+        adminConsole
+            .loadInTransactionDetailsPage(transactionId)
+            .goToEventsTab()
+            .assertThat((transactionDetailsPage) -> {
+                var attributes = transactionDetailsPage.eventsTab.getAttributesByEventType("VerifyCustomer");
+
+                assertTrue(attributes.contains("customer.name: FullMatch"));
+                assertTrue(attributes.contains("customer.address.zip: NoMatch"));
+            })
+            .goToTransactionTab()
+            .assertThat((transactionDetailsPage) -> {
+                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+
+                assertEquals(statusCode, "AC118");
+            });
+    }
+
+    @Test(groups = {"risk_name_matching"})
+    // TODO CHECAR COM PRI. NA IMAGEM A TRANSACAO EH INTERROMPIDA. AQUI ELA ACONTECE COM SUCESSO E NOMATCH
+    public void scenario_7_variant_sarah_smith_and_no_matching_zip_code() {
+        GlobexPage globex = new GlobexPage();
+        LightBoxComponent lightBoxComponent = globex
+            .load()
+            .selectMerchant("Globex Demo")
+            .selectUseCase("Instant")
+            .fillAmountWith("5.00")
+            .selectUser("US - John Smith") // setting up information before changing to "Custom"
+            .selectUser("Custom")
+            .fillUserName("Sarah Smith")
+            .fillZipCode("90111")
+            .clickOnSetCustomer()
+            .selectLanguage("English (en)")
+            .openLightBoxThroughInputSearch("Demo Bank");
+
+        lightBoxComponent
+            .switchToLightBoxIFrame()
+            .startFlow(() -> {
+                var flow = new DemoBankDefaultFlow();
+
+                flow
+                    .dismissSlider()
+                    .fillUserNameWith("RandomAccounts")
+                    .fillPasswordWith("RandomAccounts")
+                    .clickLoginButton()
+                    .selectAccountWithName("Random Savings Account")
+                    .clickOnSubmitAccount();
+            })
+            .waitUntilClose();
+
+        globex.waitRedirectUrl();
+
+        var redirectedUrl = webdriver().driver().url();
+        var succeeded = getQueryParam(redirectedUrl, "success");
+        var transactionId = getQueryParam(redirectedUrl, "transactionId");
+
+        assertEquals(succeeded, "true");
+        assertFalse(transactionId.isBlank());
+
+        AdminConsoleUtils.loginAdminConsole();
+
+        AdminConsolePage adminConsole = new AdminConsolePage();
+        adminConsole
+            .loadInTransactionDetailsPage(transactionId)
+            .goToEventsTab()
+            .assertThat((transactionDetailsPage) -> {
+                var attributes = transactionDetailsPage.eventsTab.getAttributesByEventType("VerifyCustomer");
+
+                assertTrue(attributes.contains("customer.name: NoMatch"));
+                assertTrue(attributes.contains("customer.address.zip: NoMatch"));
+            })
+            .goToTransactionTab()
+            .assertThat((transactionDetailsPage) -> {
+                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+
+                assertEquals(statusCode, "AC118");
+            });
+    }
+
+    @Test(groups = {"risk_name_matching"})
+    public void scenario_8_variant_john_smith_and_matching_zip_code() {
+        GlobexPage globex = new GlobexPage();
+        LightBoxComponent lightBoxComponent = globex
+            .load()
+            .selectMerchant("Globex Demo")
+            .selectUseCase("Instant")
+            .fillAmountWith("5.00")
+            .selectUser("US - John Smith") // setting up information before changing to "Custom"
+            .selectUser("Custom")
+            .fillUserName("John Smith")
+            .fillZipCode("90210")
+            .clickOnSetCustomer()
+            .selectLanguage("English (en)")
+            .openLightBoxThroughInputSearch("Demo Bank");
+
+        lightBoxComponent
+            .switchToLightBoxIFrame()
+            .startFlow(() -> {
+                var flow = new DemoBankDefaultFlow();
+
+                flow
+                    .dismissSlider()
+                    .fillUserNameWith("NoCustomerName")
+                    .fillPasswordWith("NoCustomerName")
+                    .clickLoginButton()
+                    .selectAccountWithName("Demo Savings Account")
+                    .clickOnSubmitAccount();
+            })
+            .waitUntilClose();
+
+        globex.waitRedirectUrl();
+
+        var redirectedUrl = webdriver().driver().url();
+        var succeeded = getQueryParam(redirectedUrl, "success");
+        var transactionId = getQueryParam(redirectedUrl, "transactionId");
+
+        assertEquals(succeeded, "true");
+        assertFalse(transactionId.isBlank());
+
+        AdminConsoleUtils.loginAdminConsole();
+
+        AdminConsolePage adminConsole = new AdminConsolePage();
+        adminConsole
+            .loadInTransactionDetailsPage(transactionId)
+            .goToEventsTab()
+            .assertThat((transactionDetailsPage) -> {
+                var attributes = transactionDetailsPage.eventsTab.getAttributesByEventType("VerifyCustomer");
+
+                assertTrue(attributes.contains("customer.name: CouldNotVerify"));
+                assertTrue(attributes.contains("customer.address.zip: FullMatch"));
+            })
+            .goToTransactionTab()
+            .assertThat((transactionDetailsPage) -> {
+                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+
+                assertEquals(statusCode, "AC118");
+            });
+    }
+
+    @Test(groups = {"risk_name_matching"})
+    public void scenario_8_variant_john_smith_and_no_matching_zip_code() {
+        GlobexPage globex = new GlobexPage();
+        LightBoxComponent lightBoxComponent = globex
+            .load()
+            .selectMerchant("Globex Demo")
+            .selectUseCase("Instant")
+            .fillAmountWith("5.00")
+            .selectUser("US - John Smith") // setting up information before changing to "Custom"
+            .selectUser("Custom")
+            .fillUserName("John Smith")
+            .fillZipCode("90111")
+            .clickOnSetCustomer()
+            .selectLanguage("English (en)")
+            .openLightBoxThroughInputSearch("Demo Bank");
+
+        lightBoxComponent
+            .switchToLightBoxIFrame()
+            .startFlow(() -> {
+                var flow = new DemoBankDefaultFlow();
+
+                flow
+                    .dismissSlider()
+                    .fillUserNameWith("NoCustomerName")
+                    .fillPasswordWith("NoCustomerName")
+                    .clickLoginButton()
+                    .selectAccountWithName("Demo Savings Account")
+                    .clickOnSubmitAccount();
+            })
+            .waitUntilClose();
+
+        globex.waitRedirectUrl();
+
+        var redirectedUrl = webdriver().driver().url();
+        var succeeded = getQueryParam(redirectedUrl, "success");
+        var transactionId = getQueryParam(redirectedUrl, "transactionId");
+
+        assertEquals(succeeded, "true");
+        assertFalse(transactionId.isBlank());
+
+        AdminConsoleUtils.loginAdminConsole();
+
+        AdminConsolePage adminConsole = new AdminConsolePage();
+        adminConsole
+            .loadInTransactionDetailsPage(transactionId)
+            .goToEventsTab()
+            .assertThat((transactionDetailsPage) -> {
+                var attributes = transactionDetailsPage.eventsTab.getAttributesByEventType("VerifyCustomer");
+
+                assertTrue(attributes.contains("customer.name: CouldNotVerify"));
+                assertTrue(attributes.contains("customer.address.zip: NoMatch"));
+            })
+            .goToTransactionTab()
+            .assertThat((transactionDetailsPage) -> {
+                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+
+                assertEquals(statusCode, "AC118");
+            });
+    }
+
+    @Test(groups = {"risk_name_matching"})
+    public void scenario_9_variant_johnsmith() {
+        GlobexPage globex = new GlobexPage();
+        LightBoxComponent lightBoxComponent = globex
+            .load()
+            .selectMerchant("Globex Demo")
+            .selectUseCase("Instant")
+            .fillAmountWith("5.00")
+            .selectUser("US - John Smith") // setting up information before changing to "Custom"
+            .selectUser("Custom")
+            .fillUserName("JohnSmith")
+            .clickOnSetCustomer()
+            .selectLanguage("English (en)")
+            .openLightBoxThroughInputSearch("Demo Bank");
+
+        lightBoxComponent
+            .switchToLightBoxIFrame()
+            .startFlow(() -> {
+                var flow = new DemoBankDefaultFlow();
+
+                flow
+                    .dismissSlider()
+                    .fillUserNameWith("RandomAccounts")
+                    .fillPasswordWith("RandomAccounts")
+                    .clickLoginButton()
+                    .selectAccountWithName("Random Savings Account")
+                    .clickOnSubmitAccount();
+            })
+            .waitUntilClose();
+
+        globex.waitRedirectUrl();
+
+        var redirectedUrl = webdriver().driver().url();
+        var succeeded = getQueryParam(redirectedUrl, "success");
+        var transactionId = getQueryParam(redirectedUrl, "transactionId");
+
+        assertEquals(succeeded, "true");
+        assertFalse(transactionId.isBlank());
+
+        AdminConsoleUtils.loginAdminConsole();
+
+        AdminConsolePage adminConsole = new AdminConsolePage();
+        adminConsole
+            .loadInTransactionDetailsPage(transactionId)
+            .goToEventsTab()
+            .assertThat((transactionDetailsPage) -> {
+                var attributes = transactionDetailsPage.eventsTab.getAttributesByEventType("VerifyCustomer");
+
+                assertTrue(attributes.contains("customer.name: PartialMatch"));
+            })
+            .goToTransactionTab()
+            .assertThat((transactionDetailsPage) -> {
+                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+
+                assertEquals(statusCode, "AC118");
+            });
+    }
+
+    @Test(groups = {"risk_name_matching"}, enabled = false)
+    // TODO CHECAR COM PRI COMO INSERIR A NOVA LINHA
+    public void scenario_9_variant_new_line_between_names() {
+        GlobexPage globex = new GlobexPage();
+        LightBoxComponent lightBoxComponent = globex
+            .load()
+            .selectMerchant("Globex Demo")
+            .selectUseCase("Instant")
+            .fillAmountWith("5.00")
+            .selectUser("US - John Smith") // setting up information before changing to "Custom"
+            .selectUser("Custom")
+            .fillUserName("JohnSmith")
+            .clickOnSetCustomer()
+            .selectLanguage("English (en)")
+            .openLightBoxThroughInputSearch("Demo Bank");
+
+        lightBoxComponent
+            .switchToLightBoxIFrame()
+            .startFlow(() -> {
+                var flow = new DemoBankDefaultFlow();
+
+                flow
+                    .dismissSlider()
+                    .fillUserNameWith("RandomAccounts")
+                    .fillPasswordWith("RandomAccounts")
+                    .clickLoginButton()
+                    .selectAccountWithName("Random Savings Account")
+                    .clickOnSubmitAccount();
+            })
+            .waitUntilClose();
+
+        globex.waitRedirectUrl();
+
+        var redirectedUrl = webdriver().driver().url();
+        var succeeded = getQueryParam(redirectedUrl, "success");
+        var transactionId = getQueryParam(redirectedUrl, "transactionId");
+
+        assertEquals(succeeded, "true");
+        assertFalse(transactionId.isBlank());
+
+        AdminConsoleUtils.loginAdminConsole();
+
+        AdminConsolePage adminConsole = new AdminConsolePage();
+        adminConsole
+            .loadInTransactionDetailsPage(transactionId)
+            .goToEventsTab()
+            .assertThat((transactionDetailsPage) -> {
+                var attributes = transactionDetailsPage.eventsTab.getAttributesByEventType("VerifyCustomer");
+
+                assertTrue(attributes.contains("customer.name: PartialMatch"));
+            })
+            .goToTransactionTab()
+            .assertThat((transactionDetailsPage) -> {
+                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+
+                assertEquals(statusCode, "AC118");
+            });
+    }
+
+    @Test(groups = {"risk_name_matching"})
+    public void scenario_9_variant_smith_john() {
+        GlobexPage globex = new GlobexPage();
+        LightBoxComponent lightBoxComponent = globex
+            .load()
+            .selectMerchant("Globex Demo")
+            .selectUseCase("Instant")
+            .fillAmountWith("5.00")
+            .selectUser("US - John Smith") // setting up information before changing to "Custom"
+            .selectUser("Custom")
+            .fillUserName("Smith John")
+            .clickOnSetCustomer()
+            .selectLanguage("English (en)")
+            .openLightBoxThroughInputSearch("Demo Bank");
+
+        lightBoxComponent
+            .switchToLightBoxIFrame()
+            .startFlow(() -> {
+                var flow = new DemoBankDefaultFlow();
+
+                flow
+                    .dismissSlider()
+                    .fillUserNameWith("RandomAccounts")
+                    .fillPasswordWith("RandomAccounts")
+                    .clickLoginButton()
+                    .selectAccountWithName("Random Savings Account")
+                    .clickOnSubmitAccount();
+            })
+            .waitUntilClose();
+
+        globex.waitRedirectUrl();
+
+        var redirectedUrl = webdriver().driver().url();
+        var succeeded = getQueryParam(redirectedUrl, "success");
+        var transactionId = getQueryParam(redirectedUrl, "transactionId");
+
+        assertEquals(succeeded, "true");
+        assertFalse(transactionId.isBlank());
+
+        AdminConsoleUtils.loginAdminConsole();
+
+        AdminConsolePage adminConsole = new AdminConsolePage();
+        adminConsole
+            .loadInTransactionDetailsPage(transactionId)
+            .goToEventsTab()
+            .assertThat((transactionDetailsPage) -> {
+                var attributes = transactionDetailsPage.eventsTab.getAttributesByEventType("VerifyCustomer");
+
+                assertTrue(attributes.contains("customer.name: PartialMatch"));
+            })
+            .goToTransactionTab()
+            .assertThat((transactionDetailsPage) -> {
+                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+
+                assertEquals(statusCode, "AC118");
+            });
+    }
+
+    @Test(groups = {"risk_name_matching"})
+    public void scenario_9_variant_john_smith_uppercase() {
+        GlobexPage globex = new GlobexPage();
+        LightBoxComponent lightBoxComponent = globex
+            .load()
+            .selectMerchant("Globex Demo")
+            .selectUseCase("Instant")
+            .fillAmountWith("5.00")
+            .selectUser("US - John Smith") // setting up information before changing to "Custom"
+            .selectUser("Custom")
+            .fillUserName("JohH SmItH")
+            .clickOnSetCustomer()
+            .selectLanguage("English (en)")
+            .openLightBoxThroughInputSearch("Demo Bank");
+
+        lightBoxComponent
+            .switchToLightBoxIFrame()
+            .startFlow(() -> {
+                var flow = new DemoBankDefaultFlow();
+
+                flow
+                    .dismissSlider()
+                    .fillUserNameWith("RandomAccounts")
+                    .fillPasswordWith("RandomAccounts")
+                    .clickLoginButton()
+                    .selectAccountWithName("Random Savings Account")
+                    .clickOnSubmitAccount();
+            })
+            .waitUntilClose();
+
+        globex.waitRedirectUrl();
+
+        var redirectedUrl = webdriver().driver().url();
+        var succeeded = getQueryParam(redirectedUrl, "success");
+        var transactionId = getQueryParam(redirectedUrl, "transactionId");
+
+        assertEquals(succeeded, "true");
+        assertFalse(transactionId.isBlank());
+
+        AdminConsoleUtils.loginAdminConsole();
+
+        AdminConsolePage adminConsole = new AdminConsolePage();
+        adminConsole
+            .loadInTransactionDetailsPage(transactionId)
+            .goToEventsTab()
+            .assertThat((transactionDetailsPage) -> {
+                var attributes = transactionDetailsPage.eventsTab.getAttributesByEventType("VerifyCustomer");
+
+                assertTrue(attributes.contains("customer.name: PartialMatch"));
+            })
+            .goToTransactionTab()
+            .assertThat((transactionDetailsPage) -> {
+                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+
+                assertEquals(statusCode, "AC118");
+            });
+    }
+
+    @Test(groups = {"risk_name_matching"})
+    public void scenario_10_variant_andre_weiss() {
+        GlobexPage globex = new GlobexPage();
+        LightBoxComponent lightBoxComponent = globex
+            .load()
+            .selectMerchant("Globex Demo")
+            .selectUseCase("Instant")
+            .fillAmountWith("5.00")
+            .selectUser("US - John Smith") // setting up information before changing to "Custom"
+            .selectUser("Custom")
+            .fillUserName("André Weiss")
+            .clickOnSetCustomer()
+            .selectLanguage("English (en)")
+            .openLightBoxThroughInputSearch("Demo Bank");
+
+        lightBoxComponent
+            .switchToLightBoxIFrame()
+            .startFlow(() -> {
+                var flow = new DemoBankDefaultFlow();
+
+                flow
+                    .dismissSlider()
+                    .fillUserNameWith("CustomerWithSpecialCharactersOnName")
+                    .fillPasswordWith("CustomerWithSpecialCharactersOnName")
+                    .clickLoginButton()
+                    .selectAccountWithName("Demo Savings Account")
+                    .clickOnSubmitAccount();
+            })
+            .waitUntilClose();
+
+        globex.waitRedirectUrl();
+
+        var redirectedUrl = webdriver().driver().url();
+        var succeeded = getQueryParam(redirectedUrl, "success");
+        var transactionId = getQueryParam(redirectedUrl, "transactionId");
+
+        assertEquals(succeeded, "true");
+        assertFalse(transactionId.isBlank());
+
+        AdminConsoleUtils.loginAdminConsole();
+
+        AdminConsolePage adminConsole = new AdminConsolePage();
+        adminConsole
+            .loadInTransactionDetailsPage(transactionId)
+            .goToEventsTab()
+            .assertThat((transactionDetailsPage) -> {
+                var attributes = transactionDetailsPage.eventsTab.getAttributesByEventType("VerifyCustomer");
+
+                assertTrue(attributes.contains("customer.name: FullMatch"));
+            })
+            .goToTransactionTab()
+            .assertThat((transactionDetailsPage) -> {
+                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+
+                assertEquals(statusCode, "AC118");
+            });
+    }
+
+    @Test(groups = {"risk_name_matching"})
+    public void scenario_10_variant_pedro_machado() {
+        GlobexPage globex = new GlobexPage();
+        LightBoxComponent lightBoxComponent = globex
+            .load()
+            .selectMerchant("Globex Demo")
+            .selectUseCase("Instant")
+            .fillAmountWith("5.00")
+            .selectUser("US - John Smith") // setting up information before changing to "Custom"
+            .selectUser("Custom")
+            .fillUserName("PEDRO M’ACHADO")
+            .clickOnSetCustomer()
+            .selectLanguage("English (en)")
+            .openLightBoxThroughInputSearch("Demo Bank");
+
+        lightBoxComponent
+            .switchToLightBoxIFrame()
+            .startFlow(() -> {
+                var flow = new DemoBankDefaultFlow();
+
+                flow
+                    .dismissSlider()
+                    .fillUserNameWith("CustomerWithSpecialCharactersOnName")
+                    .fillPasswordWith("CustomerWithSpecialCharactersOnName")
+                    .clickLoginButton()
+                    .selectAccountWithName("Demo Savings Account")
+                    .clickOnSubmitAccount();
+            })
+            .waitUntilClose();
+
+        globex.waitRedirectUrl();
+
+        var redirectedUrl = webdriver().driver().url();
+        var succeeded = getQueryParam(redirectedUrl, "success");
+        var transactionId = getQueryParam(redirectedUrl, "transactionId");
+
+        assertEquals(succeeded, "true");
+        assertFalse(transactionId.isBlank());
+
+        AdminConsoleUtils.loginAdminConsole();
+
+        AdminConsolePage adminConsole = new AdminConsolePage();
+        adminConsole
+            .loadInTransactionDetailsPage(transactionId)
+            .goToEventsTab()
+            .assertThat((transactionDetailsPage) -> {
+                var attributes = transactionDetailsPage.eventsTab.getAttributesByEventType("VerifyCustomer");
+
+                assertTrue(attributes.contains("customer.name: FullMatch"));
+            })
+            .goToTransactionTab()
+            .assertThat((transactionDetailsPage) -> {
+                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+
+                assertEquals(statusCode, "AC118");
+            });
+    }
+
+    @Test(groups = {"risk_name_matching"})
+    public void scenario_10_variant_bruno_mazzoti() {
+        GlobexPage globex = new GlobexPage();
+        LightBoxComponent lightBoxComponent = globex
+            .load()
+            .selectMerchant("Globex Demo")
+            .selectUseCase("Instant")
+            .fillAmountWith("5.00")
+            .selectUser("US - John Smith") // setting up information before changing to "Custom"
+            .selectUser("Custom")
+            .fillUserName("BRUNO M’AZZOTTI")
+            .clickOnSetCustomer()
+            .selectLanguage("English (en)")
+            .openLightBoxThroughInputSearch("Demo Bank");
+
+        lightBoxComponent
+            .switchToLightBoxIFrame()
+            .startFlow(() -> {
+                var flow = new DemoBankDefaultFlow();
+
+                flow
+                    .dismissSlider()
+                    .fillUserNameWith("CustomerWithSpecialCharactersOnName")
+                    .fillPasswordWith("CustomerWithSpecialCharactersOnName")
+                    .clickLoginButton()
+                    .selectAccountWithName("Demo Savings Account")
+                    .clickOnSubmitAccount();
+            })
+            .waitUntilClose();
+
+        globex.waitRedirectUrl();
+
+        var redirectedUrl = webdriver().driver().url();
+        var succeeded = getQueryParam(redirectedUrl, "success");
+        var transactionId = getQueryParam(redirectedUrl, "transactionId");
+
+        assertEquals(succeeded, "true");
+        assertFalse(transactionId.isBlank());
+
+        AdminConsoleUtils.loginAdminConsole();
+
+        AdminConsolePage adminConsole = new AdminConsolePage();
+        adminConsole
+            .loadInTransactionDetailsPage(transactionId)
+            .goToEventsTab()
+            .assertThat((transactionDetailsPage) -> {
+                var attributes = transactionDetailsPage.eventsTab.getAttributesByEventType("VerifyCustomer");
+
+                assertTrue(attributes.contains("customer.name: PartialMatch"));
+            })
+            .goToTransactionTab()
+            .assertThat((transactionDetailsPage) -> {
+                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+
+                assertEquals(statusCode, "AC118");
+            });
+    }
+
+    @Test(groups = {"risk_name_matching"})
+    public void scenario_10_variant_bruno_mazzoti_special_char() {
+        GlobexPage globex = new GlobexPage();
+        LightBoxComponent lightBoxComponent = globex
+            .load()
+            .selectMerchant("Globex Demo")
+            .selectUseCase("Instant")
+            .fillAmountWith("5.00")
+            .selectUser("US - John Smith") // setting up information before changing to "Custom"
+            .selectUser("Custom")
+            .fillUserName("BRUNø M'AZZOTTI")
+            .clickOnSetCustomer()
+            .selectLanguage("English (en)")
+            .openLightBoxThroughInputSearch("Demo Bank");
+
+        lightBoxComponent
+            .switchToLightBoxIFrame()
+            .startFlow(() -> {
+                var flow = new DemoBankDefaultFlow();
+
+                flow
+                    .dismissSlider()
+                    .fillUserNameWith("CustomerWithSpecialCharactersOnName")
+                    .fillPasswordWith("CustomerWithSpecialCharactersOnName")
+                    .clickLoginButton()
+                    .selectAccountWithName("Demo Savings Account")
+                    .clickOnSubmitAccount();
+            })
+            .waitUntilClose();
+
+        globex.waitRedirectUrl();
+
+        var redirectedUrl = webdriver().driver().url();
+        var succeeded = getQueryParam(redirectedUrl, "success");
+        var transactionId = getQueryParam(redirectedUrl, "transactionId");
+
+        assertEquals(succeeded, "true");
+        assertFalse(transactionId.isBlank());
+
+        AdminConsoleUtils.loginAdminConsole();
+
+        AdminConsolePage adminConsole = new AdminConsolePage();
+        adminConsole
+            .loadInTransactionDetailsPage(transactionId)
+            .goToEventsTab()
+            .assertThat((transactionDetailsPage) -> {
+                var attributes = transactionDetailsPage.eventsTab.getAttributesByEventType("VerifyCustomer");
+
+                assertTrue(attributes.contains("customer.name: FullMatch"));
+            })
+            .goToTransactionTab()
+            .assertThat((transactionDetailsPage) -> {
+                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+
+                assertEquals(statusCode, "AC118");
+            });
+    }
+
+    @Test(groups = {"risk_name_matching"})
+    public void scenario_10_variant_joao_scharf() {
+        GlobexPage globex = new GlobexPage();
+        LightBoxComponent lightBoxComponent = globex
+            .load()
+            .selectMerchant("Globex Demo")
+            .selectUseCase("Instant")
+            .fillAmountWith("5.00")
+            .selectUser("US - John Smith") // setting up information before changing to "Custom"
+            .selectUser("Custom")
+            .fillUserName("JOÃO S&#39;CHARF")
+            .clickOnSetCustomer()
+            .selectLanguage("English (en)")
+            .openLightBoxThroughInputSearch("Demo Bank");
+
+        lightBoxComponent
+            .switchToLightBoxIFrame()
+            .startFlow(() -> {
+                var flow = new DemoBankDefaultFlow();
+
+                flow
+                    .dismissSlider()
+                    .fillUserNameWith("CustomerWithSpecialCharactersOnName")
+                    .fillPasswordWith("CustomerWithSpecialCharactersOnName")
+                    .clickLoginButton()
+                    .selectAccountWithName("Demo Savings Account")
+                    .clickOnSubmitAccount();
+            })
+            .waitUntilClose();
+
+        globex.waitRedirectUrl();
+
+        var redirectedUrl = webdriver().driver().url();
+        var succeeded = getQueryParam(redirectedUrl, "success");
+        var transactionId = getQueryParam(redirectedUrl, "transactionId");
+
+        assertEquals(succeeded, "true");
+        assertFalse(transactionId.isBlank());
+
+        AdminConsoleUtils.loginAdminConsole();
+
+        AdminConsolePage adminConsole = new AdminConsolePage();
+        adminConsole
+            .loadInTransactionDetailsPage(transactionId)
+            .goToEventsTab()
+            .assertThat((transactionDetailsPage) -> {
+                var attributes = transactionDetailsPage.eventsTab.getAttributesByEventType("VerifyCustomer");
+
+                assertTrue(attributes.contains("customer.name: FullMatch"));
+            })
+            .goToTransactionTab()
+            .assertThat((transactionDetailsPage) -> {
+                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+
+                assertEquals(statusCode, "AC118");
+            });
+    }
+
+    @Test(groups = {"risk_name_matching"})
+    public void scenario_10_variant_priscila_ferreira() {
+        GlobexPage globex = new GlobexPage();
+        LightBoxComponent lightBoxComponent = globex
+            .load()
+            .selectMerchant("Globex Demo")
+            .selectUseCase("Instant")
+            .fillAmountWith("5.00")
+            .selectUser("US - John Smith") // setting up information before changing to "Custom"
+            .selectUser("Custom")
+            .fillUserName("PRISCILA F`ERREIRA")
+            .clickOnSetCustomer()
+            .selectLanguage("English (en)")
+            .openLightBoxThroughInputSearch("Demo Bank");
+
+        lightBoxComponent
+            .switchToLightBoxIFrame()
+            .startFlow(() -> {
+                var flow = new DemoBankDefaultFlow();
+
+                flow
+                    .dismissSlider()
+                    .fillUserNameWith("CustomerWithSpecialCharactersOnName")
+                    .fillPasswordWith("CustomerWithSpecialCharactersOnName")
+                    .clickLoginButton()
+                    .selectAccountWithName("Demo Savings Account")
+                    .clickOnSubmitAccount();
+            })
+            .waitUntilClose();
+
+        globex.waitRedirectUrl();
+
+        var redirectedUrl = webdriver().driver().url();
+        var succeeded = getQueryParam(redirectedUrl, "success");
+        var transactionId = getQueryParam(redirectedUrl, "transactionId");
+
+        assertEquals(succeeded, "true");
+        assertFalse(transactionId.isBlank());
+
+        AdminConsoleUtils.loginAdminConsole();
+
+        AdminConsolePage adminConsole = new AdminConsolePage();
+        adminConsole
+            .loadInTransactionDetailsPage(transactionId)
+            .goToEventsTab()
+            .assertThat((transactionDetailsPage) -> {
+                var attributes = transactionDetailsPage.eventsTab.getAttributesByEventType("VerifyCustomer");
+
+                assertTrue(attributes.contains("customer.name: FullMatch"));
+            })
+            .goToTransactionTab()
+            .assertThat((transactionDetailsPage) -> {
+                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+
+                assertEquals(statusCode, "AC118");
+            });
+    }
+
+    @Test(groups = {"risk_name_matching"})
+    public void scenario_10_variant_pri_di_ferreira() {
+        GlobexPage globex = new GlobexPage();
+        LightBoxComponent lightBoxComponent = globex
+            .load()
+            .selectMerchant("Globex Demo")
+            .selectUseCase("Instant")
+            .fillAmountWith("5.00")
+            .selectUser("US - John Smith") // setting up information before changing to "Custom"
+            .selectUser("Custom")
+            .fillUserName("Pri D’Ferreira")
+            .clickOnSetCustomer()
+            .selectLanguage("English (en)")
+            .openLightBoxThroughInputSearch("Demo Bank");
+
+        lightBoxComponent
+            .switchToLightBoxIFrame()
+            .startFlow(() -> {
+                var flow = new DemoBankDefaultFlow();
+
+                flow
+                    .dismissSlider()
+                    .fillUserNameWith("CustomerWithSpecialCharactersOnName")
+                    .fillPasswordWith("CustomerWithSpecialCharactersOnName")
+                    .clickLoginButton()
+                    .selectAccountWithName("Demo Savings Account")
+                    .clickOnSubmitAccount();
+            })
+            .waitUntilClose();
+
+        globex.waitRedirectUrl();
+
+        var redirectedUrl = webdriver().driver().url();
+        var succeeded = getQueryParam(redirectedUrl, "success");
+        var transactionId = getQueryParam(redirectedUrl, "transactionId");
+
+        assertEquals(succeeded, "true");
+        assertFalse(transactionId.isBlank());
+
+        AdminConsoleUtils.loginAdminConsole();
+
+        AdminConsolePage adminConsole = new AdminConsolePage();
+        adminConsole
+            .loadInTransactionDetailsPage(transactionId)
+            .goToEventsTab()
+            .assertThat((transactionDetailsPage) -> {
+                var attributes = transactionDetailsPage.eventsTab.getAttributesByEventType("VerifyCustomer");
+
+                assertTrue(attributes.contains("customer.name: NoMatch"));
+            })
+            .goToTransactionTab()
+            .assertThat((transactionDetailsPage) -> {
+                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+
+                assertEquals(statusCode, "AC118");
+            });
+    }
 }
 

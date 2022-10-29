@@ -4,6 +4,7 @@ import com.codeborne.selenide.SelenideElement;
 import org.openqa.selenium.By;
 
 import static com.codeborne.selenide.Selenide.$;
+import static com.codeborne.selenide.Selenide.sleep;
 import static com.codeborne.selenide.Selenide.switchTo;
 
 public class WidgetComponent {
@@ -11,6 +12,8 @@ public class WidgetComponent {
     static final SelenideElement byIFrameWidget = $("#paywithmybank-iframe-widget-container");
     static final SelenideElement byButtonAllOtherBanks = $(".bank-item--others-text-title");
     static final SelenideElement byButtonLogInToMyBanks = $("#bankLogin");
+
+    static final SelenideElement byInputSearchBar = $("#widgetSearchField");
 
     final LightBoxComponent lightBoxComponent;
 
@@ -37,9 +40,13 @@ public class WidgetComponent {
         return lightBoxComponent;
     }
 
-    public WidgetComponent searchFor(String bankName) {
-        // TODO validate if can be used for widget with search bar
-        return this;
+    public LightBoxComponent searchFor(String bankName) {
+        switchToWidgetIFrame();
+        byInputSearchBar.sendKeys(bankName);
+        // TODO IMPROVE THIS SLEEP TO WAIT FOR SOME OTHER CONDITION
+        sleep(2000); // It takes some time to have the results renders
+        $(By.xpath("//*[@id='widgetSearchList']/li[1]/div")).click();
+        return lightBoxComponent;
     }
 
     private void switchToWidgetIFrame() {

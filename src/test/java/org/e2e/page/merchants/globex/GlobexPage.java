@@ -30,6 +30,7 @@ public class GlobexPage {
     static final SelenideElement bySelectLanguage = $(By.xpath("//select[@name='language']"));
     static final SelenideElement byCheckBoxDeveloperOptions = $(".customCheckBox:nth-child(1) > span");
     static final SelenideElement byInputCustomerName = $("#customerName");
+    static final SelenideElement byInputCustomerZipCode = $("#customerZip");
     static final SelenideElement byButtonSetCustomer = $("#customer-set");
 
     final String url;
@@ -92,6 +93,12 @@ public class GlobexPage {
         return this;
     }
 
+    public GlobexPage fillZipCode(String zipCode) {
+        byInputCustomerZipCode.clear();
+        byInputCustomerZipCode.sendKeys(zipCode);
+        return this;
+    }
+
     public GlobexPage clickOnSetCustomer() {
         byButtonSetCustomer.click();
         return this;
@@ -128,6 +135,10 @@ public class GlobexPage {
             .clickLogInToMyBank();
     }
 
+    public LightBoxComponent openLightBoxThroughInputSearch(String bankName) {
+        return widgetComponent
+            .searchFor(bankName);
+    }
 //    public LightBoxComponent openLightBoxInAccountDetails() {
 //        return widgetComponent
 //            .clickAllOtherBanks();
