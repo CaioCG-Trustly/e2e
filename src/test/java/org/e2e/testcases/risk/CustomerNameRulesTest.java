@@ -6,7 +6,6 @@ import org.e2e.page.merchants.globex.GlobexPage;
 import org.e2e.page.merchants.globex.components.LightBoxComponent;
 import org.e2e.testcases.BaseTest;
 import org.e2e.utils.AdminConsoleUtils;
-import org.e2e.utils.DomUtils;
 import org.testng.annotations.Test;
 
 import static com.codeborne.selenide.Selenide.open;
@@ -23,7 +22,7 @@ public class CustomerNameRulesTest extends BaseTest {
         GlobexPage globex = new GlobexPage();
         LightBoxComponent lightBoxComponent = globex
             .load()
-            .selectMerchant("Globex (demo)")
+            .selectMerchant("Globex Demo")
             .selectUseCase("Instant")
             .fillAmountWith("5.00")
             .selectUser("US - John Smith") // setting up information before changing to "Custom"
@@ -31,13 +30,15 @@ public class CustomerNameRulesTest extends BaseTest {
             .fillUserName("John Smith II")
             .clickOnSetCustomer()
             .selectLanguage("English (en)")
-            .openLightBoxByBankLogoName("Demo Bank");
+            .openLightBoxThroughInputSearch("Demo Bank");
 
         lightBoxComponent
+            .switchToLightBoxIFrame()
             .startFlow(() -> {
                 var flow = new DemoBankDefaultFlow();
 
                 flow
+                    .dismissSlider()
                     .fillUserNameWith("RandomAccounts")
                     .fillPasswordWith("RandomAccounts")
                     .clickLoginButton()
@@ -70,7 +71,7 @@ public class CustomerNameRulesTest extends BaseTest {
             .assertThat((transactionDetailsPage) -> {
                 var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
 
-                assertEquals(statusCode, "AC102");
+                assertTrue("AC102 | AC118".contains(statusCode));
             })
         ;
     }
@@ -352,7 +353,6 @@ public class CustomerNameRulesTest extends BaseTest {
             })
             .goToRiskAnalysisTab()
             .assertThat((transactionDetailsPage) -> {
-                var a = DomUtils.getCurrentIframeName();
                 var reason = transactionDetailsPage.riskAnalysisTab.getAttributeByProperty("ruleengine.deny.reason");
                 var reasonCode = transactionDetailsPage.riskAnalysisTab.getAttributeByProperty("ruleengine.deny.reasoncode");
 
@@ -716,7 +716,6 @@ public class CustomerNameRulesTest extends BaseTest {
             })
             .goToRiskAnalysisTab()
             .assertThat((transactionDetailsPage) -> {
-                var a = DomUtils.getCurrentIframeName();
                 var reason = transactionDetailsPage.riskAnalysisTab.getAttributeByProperty("ruleengine.deny.reason");
                 var reasonCode = transactionDetailsPage.riskAnalysisTab.getAttributeByProperty("ruleengine.deny.reasoncode");
 
@@ -1734,7 +1733,6 @@ public class CustomerNameRulesTest extends BaseTest {
             })
             .goToRiskAnalysisTab()
             .assertThat((transactionDetailsPage) -> {
-                var a = DomUtils.getCurrentIframeName();
                 var reason = transactionDetailsPage.riskAnalysisTab.getAttributeByProperty("ruleengine.deny.reason");
                 var reasonCode = transactionDetailsPage.riskAnalysisTab.getAttributeByProperty("ruleengine.deny.reasoncode");
 
