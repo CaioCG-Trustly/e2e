@@ -32,6 +32,7 @@ public class LightBoxComponent {
     static final SelenideElement byInputTransitNumber = $("#lbx-formEcheck-inputtransitNumber");
     static final SelenideElement byInputFinancialInstitutionNumber = $("#lbx-formEcheck-inputfinancialInstitutionNumber");
     static final SelenideElement bySelectAccountType = $("#lbx-formEcheck-selectaccountType");
+    static final SelenideElement bySpanCloseButton = $("#lbx-header-close > span");
 
     public LightBoxComponent selectBank(String bankName) {
         $("#paywithmybank-loading-spinner").shouldNotBe(Condition.visible, Duration.ofSeconds(10));
@@ -172,6 +173,11 @@ public class LightBoxComponent {
     public LightBoxComponent selectAccountType(String accountType) {
         bySelectAccountType.selectOption(accountType);
         sleep(timeBetweenSteps);
+        return this;
+    }
+
+    public LightBoxComponent close() {
+        bySpanCloseButton.click();
         return this;
     }
 }

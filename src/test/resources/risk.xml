@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+<suite name="Risk Validation" thread-count="4" parallel="true">
+    <listeners>
+        <listener class-name="org.e2e.config.testrunner.AnnotationTransformer"/>
+    </listeners>
+
+    <test name="risk" preserve-order="false">
+        <!--        <groups>-->
+        <!--            <run>-->
+        <!--                <include name="risk_name_matching"/>-->
+        <!--            </run>-->
+        <!--        </groups>-->
+        <packages>
+            <package name="org.e2e.testcases.risk"/>
+        </packages>
+    </test>
+</suite>

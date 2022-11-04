@@ -31,6 +31,11 @@ public class AdminConsolePage {
         return this;
     }
 
+    public AdminConsolePage goToRiskAnalysisTab() {
+        transactionDetailsPage.loadRiskAnalysisTab();
+        return this;
+    }
+
     private String handleBaseUrl() {
         var baseUrl = EnvBaseUrl.valueOf(ExecutionConfig.targetEnvironment).baseUrl;
         var port = EnvBaseUrl.Local.equals(
