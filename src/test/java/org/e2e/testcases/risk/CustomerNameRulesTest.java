@@ -8,7 +8,6 @@ import org.e2e.testcases.BaseTest;
 import org.e2e.utils.AdminConsoleUtils;
 import org.testng.annotations.Test;
 
-import static com.codeborne.selenide.Selenide.open;
 import static com.codeborne.selenide.Selenide.webdriver;
 import static org.e2e.utils.UrlUtils.getQueryParam;
 import static org.testng.Assert.assertEquals;
@@ -22,7 +21,7 @@ public class CustomerNameRulesTest extends BaseTest {
         GlobexPage globex = new GlobexPage();
         LightBoxComponent lightBoxComponent = globex
             .load()
-            .selectMerchant("Globex Demo")
+            .selectMerchant("Globex (demo)")
             .selectUseCase("Instant")
             .fillAmountWith("5.00")
             .selectUser("US - John Smith") // setting up information before changing to "Custom"
@@ -60,7 +59,7 @@ public class CustomerNameRulesTest extends BaseTest {
 
         AdminConsolePage adminConsole = new AdminConsolePage();
         adminConsole
-            .loadInTransactionDetailsPage("1096810010")
+            .loadInTransactionDetailsPage(transactionId)
             .goToEventsTab()
             .assertThat((transactionDetailsPage) -> {
                 var attributes = transactionDetailsPage.eventsTab.getAttributesByEventType("VerifyCustomer");
@@ -69,9 +68,9 @@ public class CustomerNameRulesTest extends BaseTest {
             })
             .goToTransactionTab()
             .assertThat((transactionDetailsPage) -> {
-                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+                var status = transactionDetailsPage.transactionTab.getAttributeByProperty("status:").trim();
 
-                assertTrue("AC102 | AC118".contains(statusCode));
+                assertEquals(status, "Authorized");
             })
         ;
     }
@@ -81,7 +80,7 @@ public class CustomerNameRulesTest extends BaseTest {
         GlobexPage globex = new GlobexPage();
         LightBoxComponent lightBoxComponent = globex
             .load()
-            .selectMerchant("Globex Demo")
+            .selectMerchant("Globex (demo)")
             .selectUseCase("Instant")
             .fillAmountWith("5.00")
             .selectUser("US - John Smith")
@@ -131,7 +130,7 @@ public class CustomerNameRulesTest extends BaseTest {
         GlobexPage globex = new GlobexPage();
         LightBoxComponent lightBoxComponent = globex
             .load()
-            .selectMerchant("Globex Demo")
+            .selectMerchant("Globex (demo)")
             .selectUseCase("Instant")
             .fillAmountWith("5.00")
             .selectUser("US - John Smith") // setting up information before changing to "Custom"
@@ -183,7 +182,7 @@ public class CustomerNameRulesTest extends BaseTest {
         GlobexPage globex = new GlobexPage();
         LightBoxComponent lightBoxComponent = globex
             .load()
-            .selectMerchant("Globex Demo")
+            .selectMerchant("Globex (demo)")
             .selectUseCase("Instant")
             .fillAmountWith("5.00")
             .selectUser("US - John Smith") // setting up information before changing to "Custom"
@@ -217,7 +216,6 @@ public class CustomerNameRulesTest extends BaseTest {
         assertEquals(succeeded, "true");
         assertFalse(transactionId.isBlank());
 
-        open("https://uat.paywithmybank.com/admin-console");
         AdminConsoleUtils.loginAdminConsole();
 
         AdminConsolePage adminConsole = new AdminConsolePage();
@@ -231,9 +229,9 @@ public class CustomerNameRulesTest extends BaseTest {
             })
             .goToTransactionTab()
             .assertThat((transactionDetailsPage) -> {
-                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+                var status = transactionDetailsPage.transactionTab.getAttributeByProperty("status:").trim();
 
-                assertTrue("AC102 | AC118".contains(statusCode));
+                assertEquals(status, "Authorized");
             })
         ;
     }
@@ -243,7 +241,7 @@ public class CustomerNameRulesTest extends BaseTest {
         GlobexPage globex = new GlobexPage();
         LightBoxComponent lightBoxComponent = globex
             .load()
-            .selectMerchant("Globex Demo")
+            .selectMerchant("Globex (demo)")
             .selectUseCase("Instant")
             .fillAmountWith("5.00")
             .selectUser("US - John Smith") // setting up information before changing to "Custom"
@@ -290,9 +288,9 @@ public class CustomerNameRulesTest extends BaseTest {
             })
             .goToTransactionTab()
             .assertThat((transactionDetailsPage) -> {
-                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+                var status = transactionDetailsPage.transactionTab.getAttributeByProperty("status:").trim();
 
-                assertTrue("AC102 | AC118".contains(statusCode));
+                assertEquals(status, "Authorized");
             });
     }
 
@@ -301,7 +299,7 @@ public class CustomerNameRulesTest extends BaseTest {
         GlobexPage globex = new GlobexPage();
         LightBoxComponent lightBoxComponent = globex
             .load()
-            .selectMerchant("Globex Demo")
+            .selectMerchant("Globex (demo)")
             .selectUseCase("Instant")
             .fillAmountWith("5.00")
             .selectUser("US - John Smith") // setting up information before changing to "Custom"
@@ -366,7 +364,7 @@ public class CustomerNameRulesTest extends BaseTest {
         GlobexPage globex = new GlobexPage();
         LightBoxComponent lightBoxComponent = globex
             .load()
-            .selectMerchant("Globex Demo")
+            .selectMerchant("Globex (demo)")
             .selectUseCase("Instant")
             .fillAmountWith("5.00")
             .selectUser("US - John Smith") // setting up information before changing to "Custom"
@@ -413,9 +411,9 @@ public class CustomerNameRulesTest extends BaseTest {
             })
             .goToTransactionTab()
             .assertThat((transactionDetailsPage) -> {
-                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+                var status = transactionDetailsPage.transactionTab.getAttributeByProperty("status:").trim();
 
-                assertTrue("AC102 | AC118".contains(statusCode));
+                assertEquals(status, "Authorized");
             });
     }
 
@@ -424,7 +422,7 @@ public class CustomerNameRulesTest extends BaseTest {
         GlobexPage globex = new GlobexPage();
         LightBoxComponent lightBoxComponent = globex
             .load()
-            .selectMerchant("Globex Demo")
+            .selectMerchant("Globex (demo)")
             .selectUseCase("Instant")
             .fillAmountWith("5.00")
             .selectUser("US - John Smith") // setting up information before changing to "Custom"
@@ -471,9 +469,9 @@ public class CustomerNameRulesTest extends BaseTest {
             })
             .goToTransactionTab()
             .assertThat((transactionDetailsPage) -> {
-                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+                var status = transactionDetailsPage.transactionTab.getAttributeByProperty("status:").trim();
 
-                assertTrue("AC102 | AC118".contains(statusCode));
+                assertEquals(status, "Authorized");
             });
     }
 
@@ -482,7 +480,7 @@ public class CustomerNameRulesTest extends BaseTest {
         GlobexPage globex = new GlobexPage();
         LightBoxComponent lightBoxComponent = globex
             .load()
-            .selectMerchant("Globex Demo")
+            .selectMerchant("Globex (demo)")
             .selectUseCase("Instant")
             .fillAmountWith("5.00")
             .selectUser("US - John Smith") // setting up information before changing to "Custom"
@@ -529,9 +527,9 @@ public class CustomerNameRulesTest extends BaseTest {
             })
             .goToTransactionTab()
             .assertThat((transactionDetailsPage) -> {
-                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+                var status = transactionDetailsPage.transactionTab.getAttributeByProperty("status:").trim();
 
-                assertTrue("AC102 | AC118".contains(statusCode));
+                assertEquals(status, "Authorized");
             });
     }
 
@@ -540,7 +538,7 @@ public class CustomerNameRulesTest extends BaseTest {
         GlobexPage globex = new GlobexPage();
         LightBoxComponent lightBoxComponent = globex
             .load()
-            .selectMerchant("Globex Demo")
+            .selectMerchant("Globex (demo)")
             .selectUseCase("Instant")
             .fillAmountWith("5.00")
             .selectUser("US - John Smith") // setting up information before changing to "Custom"
@@ -605,7 +603,7 @@ public class CustomerNameRulesTest extends BaseTest {
         GlobexPage globex = new GlobexPage();
         LightBoxComponent lightBoxComponent = globex
             .load()
-            .selectMerchant("Globex Demo")
+            .selectMerchant("Globex (demo)")
             .selectUseCase("Instant")
             .fillAmountWith("5.00")
             .selectUser("US - John Smith") // setting up information before changing to "Custom"
@@ -652,9 +650,9 @@ public class CustomerNameRulesTest extends BaseTest {
             })
             .goToTransactionTab()
             .assertThat((transactionDetailsPage) -> {
-                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+                var status = transactionDetailsPage.transactionTab.getAttributeByProperty("status:").trim();
 
-                assertTrue("AC102 | AC118".contains(statusCode));
+                assertEquals(status, "Authorized");
             });
     }
 
@@ -664,7 +662,7 @@ public class CustomerNameRulesTest extends BaseTest {
         GlobexPage globex = new GlobexPage();
         LightBoxComponent lightBoxComponent = globex
             .load()
-            .selectMerchant("Globex Demo")
+            .selectMerchant("Globex (demo)")
             .selectUseCase("Instant")
             .fillAmountWith("5.00")
             .selectUser("US - John Smith") // setting up information before changing to "Custom"
@@ -729,7 +727,7 @@ public class CustomerNameRulesTest extends BaseTest {
         GlobexPage globex = new GlobexPage();
         LightBoxComponent lightBoxComponent = globex
             .load()
-            .selectMerchant("Globex Demo")
+            .selectMerchant("Globex (demo)")
             .selectUseCase("Instant")
             .fillAmountWith("5.00")
             .selectUser("US - John Smith") // setting up information before changing to "Custom"
@@ -794,7 +792,7 @@ public class CustomerNameRulesTest extends BaseTest {
         GlobexPage globex = new GlobexPage();
         LightBoxComponent lightBoxComponent = globex
             .load()
-            .selectMerchant("Globex Demo")
+            .selectMerchant("Globex (demo)")
             .selectUseCase("Instant")
             .fillAmountWith("5.00")
             .selectUser("US - John Smith") // setting up information before changing to "Custom"
@@ -860,7 +858,7 @@ public class CustomerNameRulesTest extends BaseTest {
         GlobexPage globex = new GlobexPage();
         LightBoxComponent lightBoxComponent = globex
             .load()
-            .selectMerchant("Globex Demo")
+            .selectMerchant("Globex (demo)")
             .selectUseCase("Instant")
             .fillAmountWith("5.00")
             .selectUser("US - John Smith") // setting up information before changing to "Custom"
@@ -914,7 +912,7 @@ public class CustomerNameRulesTest extends BaseTest {
         GlobexPage globex = new GlobexPage();
         LightBoxComponent lightBoxComponent = globex
             .load()
-            .selectMerchant("Globex Demo")
+            .selectMerchant("Globex (demo)")
             .selectUseCase("Instant")
             .fillAmountWith("5.00")
             .selectUser("US - John Smith") // setting up information before changing to "Custom"
@@ -981,7 +979,7 @@ public class CustomerNameRulesTest extends BaseTest {
         GlobexPage globex = new GlobexPage();
         LightBoxComponent lightBoxComponent = globex
             .load()
-            .selectMerchant("Globex Demo")
+            .selectMerchant("Globex (demo)")
             .selectUseCase("Instant")
             .fillAmountWith("5.00")
             .selectUser("US - John Smith") // setting up information before changing to "Custom"
@@ -1030,9 +1028,9 @@ public class CustomerNameRulesTest extends BaseTest {
             })
             .goToTransactionTab()
             .assertThat((transactionDetailsPage) -> {
-                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+                var status = transactionDetailsPage.transactionTab.getAttributeByProperty("status:").trim();
 
-                assertTrue("AC102 | AC118".contains(statusCode));
+                assertEquals(status, "Authorized");
             });
     }
 
@@ -1041,7 +1039,7 @@ public class CustomerNameRulesTest extends BaseTest {
         GlobexPage globex = new GlobexPage();
         LightBoxComponent lightBoxComponent = globex
             .load()
-            .selectMerchant("Globex Demo")
+            .selectMerchant("Globex (demo)")
             .selectUseCase("Instant")
             .fillAmountWith("5.00")
             .selectUser("US - John Smith") // setting up information before changing to "Custom"
@@ -1090,9 +1088,9 @@ public class CustomerNameRulesTest extends BaseTest {
             })
             .goToTransactionTab()
             .assertThat((transactionDetailsPage) -> {
-                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+                var status = transactionDetailsPage.transactionTab.getAttributeByProperty("status:").trim();
 
-                assertTrue("AC102 | AC118".contains(statusCode));
+                assertEquals(status, "Authorized");
             });
     }
 
@@ -1101,7 +1099,7 @@ public class CustomerNameRulesTest extends BaseTest {
         GlobexPage globex = new GlobexPage();
         LightBoxComponent lightBoxComponent = globex
             .load()
-            .selectMerchant("Globex Demo")
+            .selectMerchant("Globex (demo)")
             .selectUseCase("Instant")
             .fillAmountWith("5.00")
             .selectUser("US - John Smith") // setting up information before changing to "Custom"
@@ -1148,9 +1146,9 @@ public class CustomerNameRulesTest extends BaseTest {
             })
             .goToTransactionTab()
             .assertThat((transactionDetailsPage) -> {
-                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+                var status = transactionDetailsPage.transactionTab.getAttributeByProperty("status:").trim();
 
-                assertTrue("AC102 | AC118".contains(statusCode));
+                assertEquals(status, "Authorized");
             });
     }
 
@@ -1159,7 +1157,7 @@ public class CustomerNameRulesTest extends BaseTest {
         GlobexPage globex = new GlobexPage();
         LightBoxComponent lightBoxComponent = globex
             .load()
-            .selectMerchant("Globex Demo")
+            .selectMerchant("Globex (demo)")
             .selectUseCase("Instant")
             .fillAmountWith("5.00")
             .selectUser("US - John Smith") // setting up information before changing to "Custom"
@@ -1206,9 +1204,9 @@ public class CustomerNameRulesTest extends BaseTest {
             })
             .goToTransactionTab()
             .assertThat((transactionDetailsPage) -> {
-                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+                var status = transactionDetailsPage.transactionTab.getAttributeByProperty("status:").trim();
 
-                assertTrue("AC102 | AC118".contains(statusCode));
+                assertEquals(status, "Authorized");
             });
     }
 
@@ -1217,7 +1215,7 @@ public class CustomerNameRulesTest extends BaseTest {
         GlobexPage globex = new GlobexPage();
         LightBoxComponent lightBoxComponent = globex
             .load()
-            .selectMerchant("Globex Demo")
+            .selectMerchant("Globex (demo)")
             .selectUseCase("Instant")
             .fillAmountWith("5.00")
             .selectUser("US - John Smith") // setting up information before changing to "Custom"
@@ -1264,9 +1262,9 @@ public class CustomerNameRulesTest extends BaseTest {
             })
             .goToTransactionTab()
             .assertThat((transactionDetailsPage) -> {
-                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+                var status = transactionDetailsPage.transactionTab.getAttributeByProperty("status:").trim();
 
-                assertTrue("AC102 | AC118".contains(statusCode));
+                assertEquals(status, "Authorized");
             });
     }
 
@@ -1275,7 +1273,7 @@ public class CustomerNameRulesTest extends BaseTest {
         GlobexPage globex = new GlobexPage();
         LightBoxComponent lightBoxComponent = globex
             .load()
-            .selectMerchant("Globex Demo")
+            .selectMerchant("Globex (demo)")
             .selectUseCase("Instant")
             .fillAmountWith("5.00")
             .selectUser("US - John Smith") // setting up information before changing to "Custom"
@@ -1322,9 +1320,9 @@ public class CustomerNameRulesTest extends BaseTest {
             })
             .goToTransactionTab()
             .assertThat((transactionDetailsPage) -> {
-                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+                var status = transactionDetailsPage.transactionTab.getAttributeByProperty("status:").trim();
 
-                assertTrue("AC102 | AC118".contains(statusCode));
+                assertEquals(status, "Authorized");
             });
     }
 
@@ -1333,7 +1331,7 @@ public class CustomerNameRulesTest extends BaseTest {
         GlobexPage globex = new GlobexPage();
         LightBoxComponent lightBoxComponent = globex
             .load()
-            .selectMerchant("Globex Demo")
+            .selectMerchant("Globex (demo)")
             .selectUseCase("Instant")
             .fillAmountWith("5.00")
             .selectUser("US - John Smith") // setting up information before changing to "Custom"
@@ -1380,9 +1378,9 @@ public class CustomerNameRulesTest extends BaseTest {
             })
             .goToTransactionTab()
             .assertThat((transactionDetailsPage) -> {
-                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+                var status = transactionDetailsPage.transactionTab.getAttributeByProperty("status:").trim();
 
-                assertTrue("AC102 | AC118".contains(statusCode));
+                assertEquals(status, "Authorized");
             });
     }
 
@@ -1391,7 +1389,7 @@ public class CustomerNameRulesTest extends BaseTest {
         GlobexPage globex = new GlobexPage();
         LightBoxComponent lightBoxComponent = globex
             .load()
-            .selectMerchant("Globex Demo")
+            .selectMerchant("Globex (demo)")
             .selectUseCase("Instant")
             .fillAmountWith("5.00")
             .selectUser("US - John Smith") // setting up information before changing to "Custom"
@@ -1438,9 +1436,9 @@ public class CustomerNameRulesTest extends BaseTest {
             })
             .goToTransactionTab()
             .assertThat((transactionDetailsPage) -> {
-                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+                var status = transactionDetailsPage.transactionTab.getAttributeByProperty("status:").trim();
 
-                assertTrue("AC102 | AC118".contains(statusCode));
+                assertEquals(status, "Authorized");
             });
     }
 
@@ -1449,7 +1447,7 @@ public class CustomerNameRulesTest extends BaseTest {
         GlobexPage globex = new GlobexPage();
         LightBoxComponent lightBoxComponent = globex
             .load()
-            .selectMerchant("Globex Demo")
+            .selectMerchant("Globex (demo)")
             .selectUseCase("Instant")
             .fillAmountWith("5.00")
             .selectUser("US - John Smith") // setting up information before changing to "Custom"
@@ -1496,9 +1494,9 @@ public class CustomerNameRulesTest extends BaseTest {
             })
             .goToTransactionTab()
             .assertThat((transactionDetailsPage) -> {
-                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+                var status = transactionDetailsPage.transactionTab.getAttributeByProperty("status:").trim();
 
-                assertTrue("AC102 | AC118".contains(statusCode));
+                assertEquals(status, "Authorized");
             });
     }
 
@@ -1507,7 +1505,7 @@ public class CustomerNameRulesTest extends BaseTest {
         GlobexPage globex = new GlobexPage();
         LightBoxComponent lightBoxComponent = globex
             .load()
-            .selectMerchant("Globex Demo")
+            .selectMerchant("Globex (demo)")
             .selectUseCase("Instant")
             .fillAmountWith("5.00")
             .selectUser("US - John Smith") // setting up information before changing to "Custom"
@@ -1554,9 +1552,9 @@ public class CustomerNameRulesTest extends BaseTest {
             })
             .goToTransactionTab()
             .assertThat((transactionDetailsPage) -> {
-                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+                var status = transactionDetailsPage.transactionTab.getAttributeByProperty("status:").trim();
 
-                assertTrue("AC102 | AC118".contains(statusCode));
+                assertEquals(status, "Authorized");
             });
     }
 
@@ -1565,7 +1563,7 @@ public class CustomerNameRulesTest extends BaseTest {
         GlobexPage globex = new GlobexPage();
         LightBoxComponent lightBoxComponent = globex
             .load()
-            .selectMerchant("Globex Demo")
+            .selectMerchant("Globex (demo)")
             .selectUseCase("Instant")
             .fillAmountWith("5.00")
             .selectUser("US - John Smith") // setting up information before changing to "Custom"
@@ -1612,9 +1610,9 @@ public class CustomerNameRulesTest extends BaseTest {
             })
             .goToTransactionTab()
             .assertThat((transactionDetailsPage) -> {
-                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+                var status = transactionDetailsPage.transactionTab.getAttributeByProperty("status:").trim();
 
-                assertTrue("AC102 | AC118".contains(statusCode));
+                assertEquals(status, "Authorized");
             });
     }
 
@@ -1623,7 +1621,7 @@ public class CustomerNameRulesTest extends BaseTest {
         GlobexPage globex = new GlobexPage();
         LightBoxComponent lightBoxComponent = globex
             .load()
-            .selectMerchant("Globex Demo")
+            .selectMerchant("Globex (demo)")
             .selectUseCase("Instant")
             .fillAmountWith("5.00")
             .selectUser("US - John Smith") // setting up information before changing to "Custom"
@@ -1670,9 +1668,9 @@ public class CustomerNameRulesTest extends BaseTest {
             })
             .goToTransactionTab()
             .assertThat((transactionDetailsPage) -> {
-                var statusCode = transactionDetailsPage.transactionTab.getAttributeByProperty("statusCode:");
+                var status = transactionDetailsPage.transactionTab.getAttributeByProperty("status:").trim();
 
-                assertTrue("AC102 | AC118".contains(statusCode));
+                assertEquals(status, "Authorized");
             });
     }
 
@@ -1681,7 +1679,7 @@ public class CustomerNameRulesTest extends BaseTest {
         GlobexPage globex = new GlobexPage();
         LightBoxComponent lightBoxComponent = globex
             .load()
-            .selectMerchant("Globex Demo")
+            .selectMerchant("Globex (demo)")
             .selectUseCase("Instant")
             .fillAmountWith("5.00")
             .selectUser("US - John Smith") // setting up information before changing to "Custom"

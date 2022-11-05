@@ -157,7 +157,6 @@ public class GlobexPage {
         return ExecutionConfig.globexOptimizationForTesting ? "/?testing=true" : "";
     }
 
-
     public void waitRedirectUrl() {
         var timeToWait = List.of(1000, 2000, 3000, 5000);
         var count = 0;
